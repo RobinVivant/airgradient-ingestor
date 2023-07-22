@@ -1,0 +1,19 @@
+{
+	"name": "airgradient",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "export NO_D1_WARNING=true && wrangler deploy",
+		"start": "export NO_D1_WARNING=true && wrangler dev",
+		"tail": "export NO_D1_WARNING=true && wrangler tail --format pretty",
+		"db-init": "wrangler d1 execute airgradient --file src/db-init.sql"
+	},
+	"dependencies": {
+		"@hono/zod-validator": "^0.1.3",
+		"hono": "^3.3.2",
+		"zod": "^3.21.4"
+	},
+	"devDependencies": {
+		"wrangler": "^3.3.0"
+	}
+}

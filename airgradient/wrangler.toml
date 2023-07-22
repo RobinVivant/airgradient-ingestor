@@ -1,0 +1,9 @@
+name = "airgradient"
+compatibility_date = "2023-07-22"
+main = "./src/worker.js"
+account_id = "cd9e33fd195d65e911ed2dc87f1cf4c6"
+
+[[d1_databases]]
+binding = "DB" # i.e. available in your Worker on env.DB
+database_name = "airgradient"
+database_id = "0276844c-5cec-402b-ac29-cbcd722468f8"
