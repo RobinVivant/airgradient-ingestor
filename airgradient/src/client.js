@@ -1,4 +1,5 @@
 const sensorId = "{{__sensorId__}}";
+const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const gaugeColors = {
 	atmpGauge: '#FF4500', // OrangeRed for temperature
@@ -11,19 +12,18 @@ const gaugeColors = {
 	wifi: '#8A2BE2' // BlueViolet for WiFi
 };
 
-const FETCH_INTERVAL = 30000;
-const ONE_DAY = 24 * 60 * 60 * 1000;
 
 let chart;
 let latestTimestamp = 1;
 let isPageActive = true;
-let refreshHandle = setInterval(fetchDataAndUpdateChart, FETCH_INTERVAL);
+let refreshHandle = setInterval(fetchDataAndUpdateChart, 30000);
 const fetchDataButton = document.getElementById('fetchDataButton');
 
 document.getElementById('fetchDataButton').addEventListener('click', onClickFetchDataButton);
 document.addEventListener("visibilitychange", onVisibilityChange);
 
 (async () => {
+	const ONE_DAY = 24 * 60 * 60 * 1000;
 	await fetchDataAndUpdateChart(Date.now() - ONE_DAY);
 	setupGauges();
 })();
@@ -90,15 +90,18 @@ fetchDataButton.addEventListener('click', function () {
 });
 
 function formatDate(d) {
-	return d.toLocaleString('en-US', {month: 'numeric', day: 'numeric', hour: 'numeric', hour12: false}) + 'h';
+	return d.toLocaleString('en-US', {
+		month: 'numeric',
+		day: 'numeric',
+		hour: 'numeric',
+		hour12: false,
+		timeZone: timezone
+	}) + 'h';
 }
 
 function updateGauge(gaugeId, name, unit, value, datasetIndex) {
 	const gauge = document.getElementById(gaugeId);
-	gauge.textContent = name + " " + value;
-	if (unit) {
-		gauge.textContent += ' (' + unit + ')';
-	}
+	gauge.innerHTML = `<span class='gauge_name'>${name}</span><span class='gauge_value'>${value} ${unit || ''}</span>`;
 	gauge.style.color = ((chart && chart.data.datasets[datasetIndex].hidden) ? "gray" : gaugeColors[gaugeId]) || "gray";
 }
 
@@ -190,27 +193,70 @@ async function fetchDataAndUpdateChart(start = latestTimestamp, end = Date.now()
 	}
 
 	if (chart && !clear) {
-		chart.data.labels.push(...data.map(d => formatDate(new Date(d.ts))));
-		chart.data.datasets[0].data.push(...data.map(d => d.atmp));
-		chart.data.datasets[1].data.push(...data.map(d => d.rhum));
-		chart.data.datasets[2].data.push(...data.map(d => d.wifi));
-		chart.data.datasets[3].data.push(...data.map(d => d.rco2));
-		chart.data.datasets[4].data.push(...data.map(d => d.pm02));
-		chart.data.datasets[5].data.push(...data.map(d => d.tvoc_index));
-		chart.data.datasets[6].data.push(...data.map(d => d.nox_index));
-		chart.data.datasets[7].data.push(...data.map(d => computeHeatIndex(d.atmp, d.rhum)));
+		chart.data.labels.push.apply(chart.data.labels, data.map(d => new Date(d.ts)));
+		for (let i = 0; i < 8; i++) {
+			switch (i) {
+				case 0:
+					chart.data.datasets[i].data.push.apply(chart.data.datasets[i].data, data.map(d => d.atmp));
+					break;
+				case 1:
+					chart.data.datasets[i].data.push.apply(chart.data.datasets[i].data, data.map(d => d.rhum));
+					break;
+				case 2:
+					chart.data.datasets[i].data.push.apply(chart.data.datasets[i].data, data.map(d => d.wifi));
+					break;
+				case 3:
+					chart.data.datasets[i].data.push.apply(chart.data.datasets[i].data, data.map(d => d.rco2));
+					break;
+				case 4:
+					chart.data.datasets[i].data.push.apply(chart.data.datasets[i].data, data.map(d => d.pm02));
+					break;
+				case 5:
+					chart.data.datasets[i].data.push.apply(chart.data.datasets[i].data, data.map(d => d.tvoc_index));
+					break;
+				case 6:
+					chart.data.datasets[i].data.push.apply(chart.data.datasets[i].data, data.map(d => d.nox_index));
+					break;
+				case 7:
+					chart.data.datasets[i].data.push.apply(chart.data.datasets[i].data, data.map(d => computeHeatIndex(d.atmp, d.rhum)));
+					break;
+				default:
+					break;
+			}
+		}
 		chart.update();
 	} else {
 		const ctx = document.getElementById('myChart').getContext('2d');
 		if (chart) {
 			chart.destroy();
 		}
+		const borderWidth = 2;
 		chart = new Chart(ctx, {
 			type: 'line',
 			options: {
 				responsive: true,
 				maintainAspectRatio: false,
+				interaction: {
+					mode: 'nearest',
+					axis: 'x',
+					intersect: false
+				},
+				layout: {
+					padding: 10
+				},
+				scales: {
+					x: {
+						type: 'time',
+						ticks: {
+							source: 'auto',
+							// Disabled rotation for performance
+							maxRotation: 0,
+							autoSkip: true,
+						}
+					}
+				},
 				plugins: {
+					decimation: 'lttb',
 					legend: {
 						display: false
 					}
@@ -231,13 +277,14 @@ async function fetchDataAndUpdateChart(start = latestTimestamp, end = Date.now()
 				}
 			},
 			data: {
-				labels: data.map(d => formatDate(new Date(d.ts))),
+				labels: data.map(d => new Date(d.ts)),
 				datasets: [
 					{
 						label: 'Temp.',
 						data: data.map(d => d.atmp),
 						borderColor: gaugeColors.atmpGauge,
 						pointRadius: 0,
+						borderWidth,
 						tension: 0.5
 					},
 					{
@@ -245,6 +292,7 @@ async function fetchDataAndUpdateChart(start = latestTimestamp, end = Date.now()
 						data: data.map(d => d.rhum),
 						borderColor: gaugeColors.rhumGauge,
 						pointRadius: 0,
+						borderWidth,
 						tension: 0.5
 					},
 					{
@@ -253,6 +301,7 @@ async function fetchDataAndUpdateChart(start = latestTimestamp, end = Date.now()
 						borderColor: gaugeColors.wifi,
 						pointRadius: 0,
 						tension: 0.5,
+						borderWidth,
 						hidden: true
 					},
 					{
@@ -261,13 +310,14 @@ async function fetchDataAndUpdateChart(start = latestTimestamp, end = Date.now()
 						borderColor: gaugeColors.rco2Gauge,
 						pointRadius: 0,
 						tension: 0.5,
-						hidden: true
+						borderWidth
 					},
 					{
 						label: 'PM2.5',
 						data: data.map(d => d.pm02),
 						borderColor: gaugeColors.pm02Gauge,
 						pointRadius: 0,
+						borderWidth,
 						tension: 0.5
 					},
 					{
@@ -275,6 +325,7 @@ async function fetchDataAndUpdateChart(start = latestTimestamp, end = Date.now()
 						data: data.map(d => d.tvoc_index),
 						borderColor: gaugeColors.tvoc_indexGauge,
 						pointRadius: 0,
+						borderWidth,
 						tension: 0.5
 					},
 					{
@@ -283,13 +334,14 @@ async function fetchDataAndUpdateChart(start = latestTimestamp, end = Date.now()
 						borderColor: gaugeColors.nox_indexGauge,
 						pointRadius: 0,
 						tension: 0.5,
-						hidden: true
+						borderWidth
 					},
 					{
 						label: 'Perceived Temp.',
 						data: data.map(d => computeHeatIndex(d.atmp, d.rhum)),
 						borderColor: gaugeColors.heatIndexGauge,
 						pointRadius: 0,
+						borderWidth,
 						tension: 0.5
 					}
 				]
