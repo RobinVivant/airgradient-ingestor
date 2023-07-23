@@ -1,10 +1,12 @@
 {
 	"name": "airgradient",
 	"version": "0.0.0",
+	"type": "module",
 	"private": true,
 	"scripts": {
-		"deploy": "export NO_D1_WARNING=true && wrangler deploy",
-		"start": "export NO_D1_WARNING=true && wrangler dev",
+		"build": "rollup -c",
+		"deploy": "export NO_D1_WARNING=true && npm run build && wrangler deploy",
+		"start": "export NO_D1_WARNING=true && npm run build && wrangler dev",
 		"tail": "export NO_D1_WARNING=true && wrangler tail --format pretty",
 		"db-init": "wrangler d1 execute airgradient --file src/db-init.sql"
 	},
@@ -14,6 +16,11 @@
 		"zod": "^3.21.4"
 	},
 	"devDependencies": {
+		"@rollup/plugin-commonjs": "^25.0.3",
+		"@rollup/plugin-node-resolve": "^15.1.0",
+		"@rollup/plugin-terser": "^0.4.3",
+		"rollup": "^3.26.3",
+		"rollup-plugin-string": "^3.0.0",
 		"wrangler": "^3.3.0"
 	}
 }

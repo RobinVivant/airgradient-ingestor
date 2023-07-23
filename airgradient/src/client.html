@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+	<title>Sensor ${id} Chart</title>
+	<style>
+		body, html {
+			margin: 0;
+			height: 100vh;
+			display: flex;
+			flex-direction: column;
+		}
+
+		canvas {
+			flex: 1;
+			overflow: hidden;
+		}
+
+		.gauges {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: space-between;
+			width: 100%;
+		}
+
+		.gauge {
+			flex: 1;
+			text-align: center;
+			font-size: 20px;
+			padding: 10px;
+			background-color: #f0f0f0;
+			border-radius: 4px;
+			margin: 5px;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+			font-family: "Arial Rounded MT", sans-serif;
+
+			/* add the following lines */
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			flex-direction: column;
+		}
+	</style>
+</head>
+<body>
+
+<label for="start">Start:</label>
+<input type="datetime-local" id="start" name="start">
+<label for="end">End:</label>
+<input type="datetime-local" id="end" name="end">
+<button id="fetchDataButton">Fetch Data</button>
+
+<canvas id="myChart"></canvas>
+
+<div class="gauges">
+	<div id="atmpGauge" class="gauge"></div>
+	<div id="heatIndexGauge" class="gauge"></div>
+	<div id="rhumGauge" class="gauge"></div>
+	<div id="rco2Gauge" class="gauge"></div>
+	<div id="pm02Gauge" class="gauge"></div>
+	<div id="tvoc_indexGauge" class="gauge"></div>
+	<div id="nox_indexGauge" class="gauge"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.3.0/chart.umd.min.js"
+				integrity="sha512-TJ7U6JRJx5IpyvvO9atNnBzwJIoZDaQnQhb0Wmw32Rj5BQHAmJG16WzaJbDns2Wk5VG6gMt4MytZApZG47rCdg=="
+				crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+	{{__clientJs__}}
+</script>
+</body>
+</html>
