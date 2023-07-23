@@ -90,7 +90,7 @@ app.get('/sensors/:id', async c => {
 
 app.get('/sensors/:id/chart', async c => {
 	const {id} = c.req.param();
-	const html = clientHtml.replace("{{__clientJs__}}", clientJs.replace("{{__sensorId__}}", id));
+	const html = clientHtml.replace("'{{__clientJs__}}'", clientJs.replace("{{__sensorId__}}", id));
 	return c.html(html);
 })
 

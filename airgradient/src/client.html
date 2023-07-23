@@ -1,7 +1,9 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-	<title>Sensor ${id} Chart</title>
+	<meta charset="UTF-8">
+	<title>AirGradient Readings</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<style>
 		body, html {
 			margin: 0;
@@ -20,6 +22,7 @@
 			flex-wrap: wrap;
 			justify-content: space-between;
 			width: 100%;
+			margin-bottom: 1em;
 		}
 
 		.gauge {
@@ -32,23 +35,49 @@
 			margin: 5px;
 			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 			font-family: "Arial Rounded MT", sans-serif;
-
-			/* add the following lines */
 			display: flex;
 			justify-content: center;
 			align-items: center;
 			flex-direction: column;
 		}
+
+		.picker-wrapper {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 20px;
+			margin-left: 20px;
+			margin-right: 20px;
+		}
+
+		.picker-wrapper > input[type="datetime-local"] {
+			width: 180px;
+			flex: 1;
+		}
+
+		.button {
+			margin: 10px auto;
+			padding: 5px 24px;
+			width: 25%;
+			min-width: 140px;
+		}
+
+		/* Full width button on mobile */
+		@media screen and (max-width: 768px) {
+			.button {
+				width: 90%;
+			}
+		}
+
+		/* for smaller screens (under 768px), each gauge will take up 33.33% of the row width */
+		@media screen and (max-width: 768px) {
+			.gauge {
+				flex-basis: 33.33%;
+			}
+		}
 	</style>
 </head>
 <body>
-
-<label for="start">Start:</label>
-<input type="datetime-local" id="start" name="start">
-<label for="end">End:</label>
-<input type="datetime-local" id="end" name="end">
-<button id="fetchDataButton">Fetch Data</button>
-
 <canvas id="myChart"></canvas>
 
 <div class="gauges">
@@ -61,11 +90,18 @@
 	<div id="nox_indexGauge" class="gauge"></div>
 </div>
 
+<div class="picker-wrapper">
+	<input type="datetime-local" id="start" name="start">
+	<span>=></span>
+	<input type="datetime-local" id="end" name="end">
+</div>
+<button class="button" id="fetchDataButton">Update</button>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.3.0/chart.umd.min.js"
 				integrity="sha512-TJ7U6JRJx5IpyvvO9atNnBzwJIoZDaQnQhb0Wmw32Rj5BQHAmJG16WzaJbDns2Wk5VG6gMt4MytZApZG47rCdg=="
 				crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
-	{{__clientJs__}}
+	'{{__clientJs__}}'
 </script>
 </body>
 </html>

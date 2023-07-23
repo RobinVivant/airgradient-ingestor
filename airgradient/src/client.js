@@ -1,14 +1,14 @@
 const sensorId = "{{__sensorId__}}";
 
 const gaugeColors = {
-	atmpGauge: '#F3C98B',
-	heatIndexGauge: 'rgba(255, 159, 192, 1)',
-	rhumGauge: '#92C4AF',
-	rco2Gauge: '#B284BE',
-	pm02Gauge: '#87A8D0',
-	tvoc_indexGauge: '#66999B',
-	nox_indexGauge: '#E07C83',
-	wifi: '#EBA45E'
+	atmpGauge: '#FF4500', // OrangeRed for temperature
+	heatIndexGauge: '#FF8C00', // DarkOrange for perceived temperature
+	rhumGauge: '#1E90FF', // DodgerBlue for relative humidity
+	rco2Gauge: '#228B22', // ForestGreen for CO2 present in the atmosphere
+	pm02Gauge: '#8B4513', // SaddleBrown for particulate matter 2.5
+	tvoc_indexGauge: '#5F9EA0', // CadetBlue for Total Volatile Organic Compounds
+	nox_indexGauge: '#B22222', // FireBrick for Nitrogen Oxides
+	wifi: '#8A2BE2' // BlueViolet for WiFi
 };
 
 const FETCH_INTERVAL = 30000;
@@ -52,6 +52,25 @@ function getTimestampFromInput(elementId) {
 	return input && new Date(input).getTime();
 }
 
+async function setDefaultDateTimeInputs(start, end) {
+
+	const startDateTimeInput = document.getElementById('start');
+	const endDateTimeInput = document.getElementById('end');
+
+	const toLocalDateTimeInputString = (timestamp) => {
+		const date = new Date(timestamp);
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, "0");
+		const day = String(date.getDate()).padStart(2, "0");
+		const hours = String(date.getHours()).padStart(2, "0");
+		const minutes = String(date.getMinutes()).padStart(2, "0");
+
+		return `${year}-${month}-${day}T${hours}:${minutes}`;
+	};
+
+	startDateTimeInput.value = toLocalDateTimeInputString(start);
+	endDateTimeInput.value = toLocalDateTimeInputString(end);
+}
 
 fetchDataButton.addEventListener('click', function () {
 	const startInput = document.getElementById('start')
@@ -153,6 +172,8 @@ async function fetchDataAndUpdateChart(start = latestTimestamp, end = Date.now()
 
 	const response = await fetch(`/sensors/${sensorId}?start=` + (Math.round(start / 1000)) + '&end=' + (Math.round(end / 1000)));
 	const data = await response.json();
+
+	await setDefaultDateTimeInputs(start, end);
 
 	latestTimestamp = end;
 
