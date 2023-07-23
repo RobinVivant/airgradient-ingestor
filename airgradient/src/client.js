@@ -68,7 +68,12 @@ async function setDefaultDateTimeInputs(start, end) {
 		return `${year}-${month}-${day}T${hours}:${minutes}`;
 	};
 
-	startDateTimeInput.value = toLocalDateTimeInputString(start);
+	// Only update start input if it's not the default (latestTimestamp)
+	if (latestTimestamp === 1) {
+		startDateTimeInput.value = toLocalDateTimeInputString(start);
+	}
+
+	// continue updating end input as usual
 	endDateTimeInput.value = toLocalDateTimeInputString(end);
 }
 
