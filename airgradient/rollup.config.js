@@ -27,7 +27,7 @@ export default {
 			},
 		}),
 		string({
-			include: ["src/client.js", "src/client.html"]
+			include: ["src/client.js", "src/client.html", "src/openapi.yaml", "src/ai-plugin.json"]
 		})
 	]
 };

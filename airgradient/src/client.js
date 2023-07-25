@@ -9,7 +9,8 @@ const gaugeColors = {
 	pm02Gauge: '#8B4513', // SaddleBrown for particulate matter 2.5
 	tvoc_indexGauge: '#5F9EA0', // CadetBlue for Total Volatile Organic Compounds
 	nox_indexGauge: '#B22222', // FireBrick for Nitrogen Oxides
-	wifi: '#8A2BE2' // BlueViolet for WiFi
+	wifi: '#8A2BE2', // BlueViolet for WiFi
+	pressureGauge: '#000080' // Navy for Pressure
 };
 
 
@@ -111,7 +112,7 @@ function updateGauge(gaugeId, name, unit, value, datasetIndex) {
 }
 
 function setupGauges() {
-	const gauges = ["atmpGauge", "rhumGauge", null, "rco2Gauge", "pm02Gauge", "tvoc_indexGauge", "nox_indexGauge", "heatIndexGauge"];
+	const gauges = ["atmpGauge", "rhumGauge", null, "rco2Gauge", "pm02Gauge", "tvoc_indexGauge", "nox_indexGauge", "heatIndexGauge", "pressureGauge"];
 	gauges.forEach((gaugeId, index) => {
 		if (!gaugeId) {
 			return;
@@ -195,6 +196,7 @@ async function fetchDataAndUpdateChart(start = latestTimestamp, end = Date.now()
 		updateGauge('pm02Gauge', 'PM 2.5', 'μg/m³', latestData.pm02, 4);
 		updateGauge('tvoc_indexGauge', 'TVOC', 'ind', latestData.tvoc_index, 5);
 		updateGauge('nox_indexGauge', 'NOx', 'ind', latestData.nox_index, 6);
+		updateGauge('pressureGauge', 'Pressure', 'hPa', latestData.pressure || -1, 7);
 	}
 
 	if (chart && !clear) {
@@ -224,6 +226,9 @@ async function fetchDataAndUpdateChart(start = latestTimestamp, end = Date.now()
 					break;
 				case 7:
 					chart.data.datasets[i].data.push.apply(chart.data.datasets[i].data, data.map(d => computeHeatIndex(d.atmp, d.rhum)));
+					break;
+				case 8:
+					chart.data.datasets[i].data.push.apply(chart.data.datasets[i].data, data.map(d => d.pressure || 0));
 					break;
 				default:
 					break;
@@ -289,23 +294,20 @@ async function fetchDataAndUpdateChart(start = latestTimestamp, end = Date.now()
 						data: data.map(d => d.atmp),
 						borderColor: gaugeColors.atmpGauge,
 						pointRadius: 0,
-						borderWidth,
-						tension: 0.5
+						borderWidth
 					},
 					{
 						label: 'R. Hum.',
 						data: data.map(d => d.rhum),
 						borderColor: gaugeColors.rhumGauge,
 						pointRadius: 0,
-						borderWidth,
-						tension: 0.5
+						borderWidth
 					},
 					{
 						label: 'Wifi',
 						data: data.map(d => d.wifi),
 						borderColor: gaugeColors.wifi,
 						pointRadius: 0,
-						tension: 0.5,
 						borderWidth,
 						hidden: true
 					},
@@ -314,7 +316,6 @@ async function fetchDataAndUpdateChart(start = latestTimestamp, end = Date.now()
 						data: data.map(d => d.rco2),
 						borderColor: gaugeColors.rco2Gauge,
 						pointRadius: 0,
-						tension: 0.5,
 						borderWidth
 					},
 					{
@@ -322,23 +323,20 @@ async function fetchDataAndUpdateChart(start = latestTimestamp, end = Date.now()
 						data: data.map(d => d.pm02),
 						borderColor: gaugeColors.pm02Gauge,
 						pointRadius: 0,
-						borderWidth,
-						tension: 0.5
+						borderWidth
 					},
 					{
 						label: 'TVOC',
 						data: data.map(d => d.tvoc_index),
 						borderColor: gaugeColors.tvoc_indexGauge,
 						pointRadius: 0,
-						borderWidth,
-						tension: 0.5
+						borderWidth
 					},
 					{
 						label: 'NOx',
 						data: data.map(d => d.nox_index),
 						borderColor: gaugeColors.nox_indexGauge,
 						pointRadius: 0,
-						tension: 0.5,
 						borderWidth
 					},
 					{
@@ -346,13 +344,18 @@ async function fetchDataAndUpdateChart(start = latestTimestamp, end = Date.now()
 						data: data.map(d => computeHeatIndex(d.atmp, d.rhum)),
 						borderColor: gaugeColors.heatIndexGauge,
 						pointRadius: 0,
-						borderWidth,
-						tension: 0.5
+						borderWidth
+					},
+					{
+						label: 'Pressure',
+						data: data.map(d => d.pressure || 0),
+						borderColor: gaugeColors.pressureGauge,
+						pointRadius: 0,
+						borderWidth
 					}
 				]
 			},
 		});
 	}
-
 }
 

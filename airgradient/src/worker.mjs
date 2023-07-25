@@ -3,6 +3,8 @@ import {zValidator} from '@hono/zod-validator'
 import {z} from 'zod'
 import clientJs from './client.js'
 import clientHtml from './client.html'
+import openapiYaml from './openapi.yaml'
+import aiPluginJson from './ai-plugin.json'
 
 
 const app = new Hono();
@@ -17,6 +19,15 @@ app.use(async (c, next) => {
 	}
 });
 
+app.get('/.well-known/ai-plugin.json', async c => {
+	return c.json(JSON.parse(aiPluginJson));
+});
+
+app.get('/openapi.yaml', async c => {
+	return c.text(openapiYaml);
+});
+
+
 app.post('/sensors/:id/measures',
 	zValidator(
 		'json',
@@ -27,7 +38,8 @@ app.post('/sensors/:id/measures',
 			tvoc_index: z.number(),
 			nox_index: z.number(),
 			atmp: z.number(),
-			rhum: z.number()
+			rhum: z.number(),
+			pressure: z.number()
 		})
 	),
 	async c => {
@@ -35,10 +47,10 @@ app.post('/sensors/:id/measures',
 		const body = c.req.valid('json')
 		console.log(id, body)
 
-		const {wifi, rco2, pm02, tvoc_index, nox_index, atmp, rhum} = body;
+		const {wifi, rco2, pm02, tvoc_index, nox_index, atmp, rhum, pressure} = body;
 
 		c.env.MEASURES.writeDataPoint({
-			'doubles': [wifi, rco2, pm02, tvoc_index, nox_index, atmp, rhum],
+			'doubles': [wifi, rco2, pm02, tvoc_index, nox_index, atmp, rhum, pressure],
 			'indexes': [id.split(':')[1]]
 		});
 
@@ -48,25 +60,27 @@ app.post('/sensors/:id/measures',
 
 app.get('/sensors/:id', async c => {
 	const {id} = c.req.param();
-	let start = c.req.query('start') || Date.now() - 24 * 60 * 60 * 1000; // Default to past 24 hours
-	let end = c.req.query('end') || Date.now(); // Default to current time
+	let start = parseInt(c.req.query('start')) || (Date.now() - 60 * 60* 1000)/1000; // Default to past 1 hour
+	let end = parseInt(c.req.query('end')) || (Date.now()/1000); // Default to current time
 
-	start = Math.round(parseInt(start));
-	end = Math.round(parseInt(end));
+	start = Math.round(start);
+	end = Math.round(end);
+
 
 	const query = `
-		SELECT double1 AS wifi,
-					 double2 AS rco2,
-					 double3 AS pm02,
-					 double4 AS tvoc_index,
-					 double5 AS nox_index,
-					 double6 AS atmp,
-					 double7 AS rhum, timestamp AS ts
-		FROM MEASURES
-		WHERE timestamp >= toDateTime(${start})
-			AND timestamp <= toDateTime(${end})
-		ORDER BY ts ASC
-	`;
+      SELECT double1 AS wifi,
+             double2 AS rco2,
+             double3 AS pm02,
+             double4 AS tvoc_index,
+             double5 AS nox_index,
+             double6 AS atmp,
+             double7 AS rhum,
+             double8 AS pressure, timestamp AS ts
+      FROM MEASURES
+      WHERE timestamp >= toDateTime(${start})
+        AND timestamp <= toDateTime(${end})
+      ORDER BY ts ASC
+  `;
 
 	const API = `https://api.cloudflare.com/client/v4/accounts/${c.env.ACCOUNT_ID}/analytics_engine/sql`;
 	const queryResponse = await fetch(API, {

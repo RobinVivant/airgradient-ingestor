@@ -1,0 +1,17 @@
+{
+	"schema_version": "v1",
+	"name_for_human": "Air quality sensor data",
+	"name_for_model": "air_sensor_data",
+	"description_for_human": "Retrieve air quality sensor data. You can fetch the sensor data for a specific time interval.",
+	"description_for_model": "Plugin for retrieving air quality sensor data. The plugin supports fetching the data for a specific time interval.",
+	"api": {
+		"type": "openapi",
+		"url": "https://airgradient.robin-hood.workers.dev/openapi.yaml"
+	},
+	"auth": {
+		"type": "none"
+	},
+	"contact_email": "robin.vivant@gmail.com",
+	"logo_url": "https://openweathermap.org/themes/openweathermap/assets/vendor/owm/img/icons/logo_32x32.png",
+	"legal_info_url": "https://airgradient.robin-hood.workers.dev"
+}
