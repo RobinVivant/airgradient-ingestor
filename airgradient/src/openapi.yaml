@@ -38,8 +38,11 @@ paths:
                     rhum:
                       type: number
                       description: relative humidity in percent
+                    pressure:
+                      type: number
+                      description: barometric pressure in hPa
                     ts:
                       type: string
                       description: unix timestamp of the measure (UTC time)
-                  required: [ "wifi", "rco2", "pm02", "tvoc_index", "nox_index", "atmp", "rhum", "ts" ]
+                  required: [ "wifi", "rco2", "pm02", "tvoc_index", "nox_index", "atmp", "rhum", "pressure", "ts" ]
                   description: The sensor data sampled at a 30 seconds interval
