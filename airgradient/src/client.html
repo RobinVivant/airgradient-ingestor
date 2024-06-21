@@ -1,140 +1,62 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>AirGradient Readings</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>AirGradient Dashboard</title>
+	<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/luxon"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
 	<style>
-		body, html {
-			margin: 0;
-			height: 100vh;
-			display: flex;
-			flex-direction: column;
-			font-family: 'Roboto', sans-serif; /* Material Design recommends Roboto font */
-		}
-
-		canvas {
-			flex: 1;
-		}
-
-		.gauges {
-			display: flex;
-			flex-wrap: wrap;
-			justify-content: space-between;
-			padding: 16px; /* Add some padding for the overall container */
-		}
-
-		.gauge {
-			flex: 1;
-			text-align: center;
-			font-size: 20px;
-			background-color: #FFFFFF; /* Material Design uses a lot of whites/greys */
-			border-radius: 4px;
-			margin: 8px; /* 8px margins create a more spacious layout */
-			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			flex-direction: column;
-			transition: color 0.2s;
-			padding: 0.2em;
-		}
-
-		.gauge_value {
-			font-weight: 500; /* Medium emphasis text -> 500 font weight */
-			font-size: 18px;
-		}
-
-		.gauge_name {
-			font-size: 16px;
-			margin-right: 10px;
-			color: rgba(0, 0, 0, 0.54); /* Secondary text -> opacity 54% */
-		}
-
-		.picker-wrapper {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 20px;
-			max-width: 768px;
-			margin: auto;
-		}
-
-		.picker-wrapper > input[type="datetime-local"] {
-			width: 250px;
-			flex: 1;
-			border-radius: 4px; /* rounded borders on inputs */
-			border: none; /* remove the default border */
-			padding: 8px 16px; /* add some padding */
-			box-sizing: border-box; /* include padding and border in element's total width and height */
-		}
-
-		.button {
-			margin: 16px auto; /* Increase button margin */
-			padding: 6px 16px;
-			border: none;
-			border-radius: 4px;
-			color: #fff; /* white color text */
-			background-color: #3f51b5; /* primary color */
-			transition: background-color 0.3s;
-			max-width: 768px;
-			display: block;
-		}
-
-		.button:hover {
-			background-color: #303f9f; /* darkens button when hovered */
-		}
-
-		/* Full width button and picker-wrapper on mobile */
-		@media screen and (max-width: 768px) {
-			.button,
-			.picker-wrapper {
-				width: 90%;
-			}
-		}
-
-		/* for smaller screens (under 768px), each gauge will take up 33.33% of the row width */
-		@media screen and (max-width: 768px) {
-			.gauge {
-				flex-basis: 33.33%;
-			}
+		#chartContainer {
+			position: relative;
+			height: calc(100vh - 400px);
+			min-height: 50vh;
 		}
 	</style>
 </head>
-<body>
+<body class="bg-gray-100 font-sans">
+<div class="container mx-auto px-4 py-8 h-screen flex flex-col">
+	<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+		<div id="atmpGauge" class="bg-white p-4 rounded-lg shadow"></div>
+		<div id="feltTempGauge" class="bg-white p-4 rounded-lg shadow"></div>
+		<div id="rhumGauge" class="bg-white p-4 rounded-lg shadow"></div>
+		<div id="pressureGauge" class="bg-white p-4 rounded-lg shadow"></div>
+		<div id="rco2Gauge" class="bg-white p-4 rounded-lg shadow"></div>
+		<div id="pm02Gauge" class="bg-white p-4 rounded-lg shadow"></div>
+		<div id="tvoc_indexGauge" class="bg-white p-4 rounded-lg shadow"></div>
+		<div id="nox_indexGauge" class="bg-white p-4 rounded-lg shadow"></div>
+	</div>
 
-<div class="gauges">
-	<div id="atmpGauge" class="gauge"></div>
-	<div id="heatIndexGauge" class="gauge"></div>
-	<div id="rhumGauge" class="gauge"></div>
-	<div id="pressureGauge" class="gauge"></div>
-	<div id="rco2Gauge" class="gauge"></div>
-	<div id="pm02Gauge" class="gauge"></div>
-	<div id="tvoc_indexGauge" class="gauge"></div>
-	<div id="nox_indexGauge" class="gauge"></div>
+	<div class="flex flex-col md:flex-row justify-between items-center mb-8">
+		<div class="w-full md:w-auto mb-4 md:mb-0">
+			<label for="timeRange" class="block text-sm font-medium text-gray-700 mb-1">Time Range:</label>
+			<select id="timeRange"
+							class="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+				<option value="1h">Last Hour</option>
+				<option value="24h">Last 24 Hours</option>
+				<option value="7d">Last 7 Days</option>
+				<option value="30d">Last 30 Days</option>
+				<option value="custom">Custom Range</option>
+			</select>
+		</div>
+		<div id="customDateRange" class="hidden w-full md:w-auto">
+			<input type="datetime-local" id="startDate"
+						 class="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mb-2 md:mb-0 md:mr-2">
+			<input type="datetime-local" id="endDate"
+						 class="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+		</div>
+	</div>
+
+	<div id="chartContainer" class="bg-white p-4 rounded-lg shadow flex-grow">
+		<canvas id="airQualityChart"></canvas>
+	</div>
 </div>
-
-<div class="picker-wrapper">
-	<input type="datetime-local" id="start" name="start">
-	<span>=></span>
-	<input type="datetime-local" id="end" name="end">
-</div>
-<button class="button" id="fetchDataButton">Update</button>
-<canvas id="myChart"></canvas>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.3.0/chart.umd.min.js"
-				integrity="sha512-TJ7U6JRJx5IpyvvO9atNnBzwJIoZDaQnQhb0Wmw32Rj5BQHAmJG16WzaJbDns2Wk5VG6gMt4MytZApZG47rCdg=="
-				crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.3.0/luxon.min.js"
-				integrity="sha512-KKbQg5o92MwtJKR9sfm/HkREzfyzNMiKPIQ7i7SZOxwEdiNCm4Svayn2DBq7MKEdrqPJUOSIpy1v6PpFlCQ0YA=="
-				crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-luxon/1.3.1/chartjs-adapter-luxon.umd.min.js"
-				integrity="sha512-I8SeDoNxRKOuQMhqHmx95hydiG/LCY9SFCs3cqAf+f1kIZbAyXXIXIIwgx32ZIgZpOVrEOHSfyjeKxRNIuBvWQ=="
-				crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
 
 <script>
-	'{{__clientJs__}}'
+	// Client-side JavaScript will be inserted here
+	'{{__clientJs__}}';
 </script>
 </body>
 </html>
