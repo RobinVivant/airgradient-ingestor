@@ -1,8 +1,10 @@
-openapi: 3.0.1
+openapi: 3.1.0
 info:
   title: Personal Sensor Data Plugin
-  description: A plugin that allows the user to get air quality and temperature and humidity readings from a set of sensors located inside his house. Sends back the last 1h of data.
+  description: A plugin that allows the user to get air quality and temperature and humidity readings from a set of sensors located inside Robin's house. Sends back the last 1h of data.
   version: 'v1'
+servers:
+  - url: https://airgradient.robin-hood.workers.dev
 paths:
   /sensors/airgradient:d03276:
     get:
