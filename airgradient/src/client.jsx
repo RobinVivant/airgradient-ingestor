@@ -111,10 +111,14 @@ function Gauge({ metric, value, visible, onToggle, isAnimating }) {
 		transform: isAnimating ? 'scale(1.05)' : 'scale(1)',
 	};
 
+	const displayValue = value !== 'N/A' ? 
+		(metric === 'pressure' ? parseFloat(value).toFixed(0) : parseFloat(value).toFixed(1)) 
+		: 'N/A';
+
 	return (
 		<div className="bg-white p-4 rounded-lg shadow" style={style} onClick={() => onToggle(metric)}>
 			<div className="text-lg font-semibold" style={{ color: gaugeColor }}>
-				<RotatingNumber value={value !== 'N/A' ? parseFloat(value).toFixed(1) : 'N/A'} />
+				<RotatingNumber value={displayValue} />
 				{value !== 'N/A' && unit}
 			</div>
 			<div className="text-sm text-gray-500">{label}</div>
@@ -279,6 +283,11 @@ function App() {
 				setTimeout(() => setAnimatingMetrics({}), 1000);
 				return processedData;
 			});
+
+			// Update the chart after setting the data
+			requestAnimationFrame(() => {
+				updateChart();
+			});
 		} catch (error) {
 			console.error('Error fetching or processing data:', error);
 			// You might want to set an error state here and display it to the user
@@ -286,7 +295,7 @@ function App() {
 	}
 
 	function updateChart() {
-		if (!svgRef.current) return;
+		if (!svgRef.current || data.length === 0) return;
 
 		const margin = { top: 20, right: 20, bottom: 30, left: 50 };
 		const width = svgRef.current.clientWidth - margin.left - margin.right;
@@ -335,12 +344,23 @@ function App() {
 		svg.append("g")
 			.call(d3.axisLeft(y));
 
+		const clip = svg.append("defs").append("svg:clipPath")
+			.attr("id", "clip")
+			.append("svg:rect")
+			.attr("width", width)
+			.attr("height", height)
+			.attr("x", 0)
+			.attr("y", 0);
+
+		const chartGroup = svg.append("g")
+			.attr("clip-path", "url(#clip)");
+
 		visibleMetricKeys.forEach(metric => {
 			const line = d3.line()
 				.x(d => x(d.ts))
 				.y(d => y(d[metric]));
 
-			svg.append("path")
+			chartGroup.append("path")
 				.datum(data)
 				.attr("fill", "none")
 				.attr("stroke", sensorMetrics[metric].gaugeColor)
