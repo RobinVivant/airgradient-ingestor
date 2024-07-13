@@ -78,7 +78,7 @@ app.get('/sensors/:id', async c => {
 
 	let intervalFunction;
 	if (interval === '1 hour') {
-		intervalFunction = 'toStartOfHour(timestamp)';
+		intervalFunction = 'toDateTime(intDiv(toUInt32(timestamp), 3600) * 3600)';
 	} else if (interval === '15 minute') {
 		intervalFunction = 'toDateTime(intDiv(toUInt32(timestamp), 900) * 900)';
 	} else if (interval === '5 minute') {
