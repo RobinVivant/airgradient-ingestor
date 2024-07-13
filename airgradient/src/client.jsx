@@ -198,11 +198,6 @@ function App() {
 	const svgRef = React.useRef(null);
 	const [currentVersion, setCurrentVersion] = React.useState(null);
 
-	React.useEffect(() => {
-		fetchDataAndUpdateChart();
-		const interval = setInterval(fetchDataAndUpdateChart, 30000);
-		return () => clearInterval(interval);
-	}, [timeRange, startDate, endDate]);
 
 	React.useEffect(() => {
 		if (data.length > 0) {
@@ -211,32 +206,16 @@ function App() {
 	}, [data, visibleMetrics]);
 
 	React.useEffect(() => {
-		const ws = new WebSocket(`wss://${window.location.host}/ws`);
-		let pingInterval;
-
-		ws.onopen = () => {
-			console.log('WebSocket connected');
-			pingInterval = setInterval(() => ws.send('ping'), 30000);
-			fetchVersion();
+		const fetchDataAndVersion = async () => {
+			await fetchDataAndUpdateChart();
+			await fetchVersion();
 		};
 
-		ws.onclose = () => {
-			console.log('WebSocket disconnected');
-			clearInterval(pingInterval);
-			alert('A new version has been deployed. The page will now refresh.');
-			window.location.reload();
-		};
+		fetchDataAndVersion(); // Initial fetch
+		const interval = setInterval(fetchDataAndVersion, 30000); // Fetch every 30 seconds
 
-		return () => {
-			clearInterval(pingInterval);
-			ws.close();
-		};
-	}, []);
-
-	React.useEffect(() => {
-		const versionCheckInterval = setInterval(fetchVersion, 300000); // Check every 5 minutes
-		return () => clearInterval(versionCheckInterval);
-	}, []);
+		return () => clearInterval(interval);
+	}, [timeRange, startDate, endDate]);
 
 	async function fetchVersion() {
 		try {
