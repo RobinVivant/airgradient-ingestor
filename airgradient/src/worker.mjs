@@ -8,6 +8,30 @@ import aiPluginJson from './ai-plugin.json';
 
 const app = new Hono();
 
+// Add a WebSocket endpoint
+app.get('/ws', (c) => {
+  const upgradeHeader = c.req.header('Upgrade');
+  if (upgradeHeader !== 'websocket') {
+    return c.text('Expected Upgrade: websocket', 426);
+  }
+
+  const { response, socket } = Durable.webSocketPair();
+  socket.accept();
+
+  socket.addEventListener('message', (event) => {
+    if (event.data === 'ping') {
+      socket.send('pong');
+    }
+  });
+
+  return response;
+});
+
+// Add a version endpoint
+app.get('/version', (c) => {
+  return c.json({ version: c.env.CF_PAGES_COMMIT_SHA || 'development' });
+});
+
 app.use(async (c, next) => {
 	try {
 		await next();
