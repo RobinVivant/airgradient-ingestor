@@ -5,12 +5,9 @@ import clientJs from './client.jsx';
 import clientHtml from './client.html';
 const app = new Hono();
 
-// Generate a version string based on timestamp
-const generateVersion = () => Date.now().toString(36);
-
 // Add a version endpoint
 app.get('/version', (c) => {
-	return c.json({ version: generateVersion() });
+	return c.json({ version: c.env.APP_VERSION });
 });
 
 app.use(async (c, next) => {
