@@ -374,7 +374,7 @@ function App() {
 			.ticks(5)
 			.tickFormat(d => {
 				const format = d3.timeFormat('%b %d %H:%M');
-				return format(new Date(d.getTime() + d.getTimezoneOffset() * 60000));
+				return format(new Date(d.getTime() - d.getTimezoneOffset() * 60000));
 			});
 
 		svg.append('g')
@@ -453,7 +453,7 @@ function App() {
 				const d1 = data[i];
 				const d = x0 - d0.ts > d1.ts - x0 ? d1 : d0;
 
-				tooltip.html(`<strong>${new Date(d.ts.getTime() + d.ts.getTimezoneOffset() * 60000).toLocaleString(undefined, {
+				tooltip.html(`<strong>${new Date(d.ts.getTime() - d.ts.getTimezoneOffset() * 60000).toLocaleString(undefined, {
 					month: 'short',
 					day: 'numeric',
 					hour: 'numeric',
