@@ -9,7 +9,7 @@ const app = new Hono();
 
 // Add a version endpoint
 app.get('/version', (c) => {
-	return c.json({ version: c.env.CF_PAGES_COMMIT_SHA || 'development' });
+	return c.json({ version: c.env.COMMIT_SHA || 'development' });
 });
 
 app.use(async (c, next) => {
