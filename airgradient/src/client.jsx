@@ -282,7 +282,7 @@ function App() {
 	function updateChart() {
 		if (!svgRef.current || data.length === 0) return;
 
-		const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+		const margin = { top: 20, right: 20, bottom: 50, left: 60 };
 		const width = svgRef.current.clientWidth - margin.left - margin.right;
 		const height = svgRef.current.clientHeight - margin.top - margin.bottom;
 
@@ -306,6 +306,7 @@ function App() {
 				d3.min(data, d => Math.min(...visibleMetricKeys.map(metric => d[metric]))),
 				d3.max(data, d => Math.max(...visibleMetricKeys.map(metric => d[metric])))
 			])
+			.nice()
 			.range([height, 0]);
 
 		const xAxis = d3.axisBottom(x)
@@ -328,12 +329,23 @@ function App() {
 		svg.append("g")
 			.call(d3.axisLeft(y));
 
+		const clip = svg.append("defs").append("svg:clipPath")
+			.attr("id", "clip")
+			.append("svg:rect")
+			.attr("width", width)
+			.attr("height", height)
+			.attr("x", 0)
+			.attr("y", 0);
+
+		const chartGroup = svg.append("g")
+			.attr("clip-path", "url(#clip)");
+
 		visibleMetricKeys.forEach(metric => {
 			const line = d3.line()
 				.x(d => x(d.ts))
 				.y(d => y(d[metric]));
 
-			svg.append("path")
+			chartGroup.append("path")
 				.datum(data)
 				.attr("fill", "none")
 				.attr("stroke", sensorMetrics[metric].gaugeColor)
@@ -359,6 +371,11 @@ function App() {
 			setTimeRange('custom');
 			setStartDate(x0.toLocaleString());
 			setEndDate(x1.toLocaleString());
+			
+			// Update the chart with the new brush extent
+			x.domain([x0, x1]);
+			svg.select(".brush").call(brush.move, null); // Clear the brush
+			updateChart();
 		}
 	}
 
