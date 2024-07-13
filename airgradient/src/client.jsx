@@ -101,20 +101,49 @@ function calculateHeatIndex(tempCelsius, relativeHumidity) {
 	return Number(((hi - 32) / 1.8).toFixed(1));
 }
 
-function Gauge({ metric, value, visible, onToggle }) {
+function Gauge({ metric, value, visible, onToggle, isAnimating }) {
 	const { label, unit, gaugeColor } = sensorMetrics[metric];
 	const style = {
 		opacity: visible ? 1 : 0.5,
 		filter: visible ? 'none' : 'grayscale(100%)',
 		cursor: 'pointer',
+		transition: 'all 0.3s ease',
+		transform: isAnimating ? 'scale(1.05)' : 'scale(1)',
 	};
 
 	return (
 		<div className="bg-white p-4 rounded-lg shadow" style={style} onClick={() => onToggle(metric)}>
-			<div className="text-lg font-semibold" style={{ color: gaugeColor }}>{value}{unit}</div>
+			<div className="text-lg font-semibold" style={{ color: gaugeColor }}>
+				<RotatingNumber value={value} />
+				{unit}
+			</div>
 			<div className="text-sm text-gray-500">{label}</div>
 		</div>
 	);
+}
+
+function RotatingNumber({ value }) {
+	const [displayValue, setDisplayValue] = React.useState(value);
+	const [isRotating, setIsRotating] = React.useState(false);
+
+	React.useEffect(() => {
+		if (value !== displayValue) {
+			setIsRotating(true);
+			const timer = setTimeout(() => {
+				setDisplayValue(value);
+				setIsRotating(false);
+			}, 500);
+			return () => clearTimeout(timer);
+		}
+	}, [value, displayValue]);
+
+	const style = {
+		display: 'inline-block',
+		transition: 'all 0.5s',
+		transform: isRotating ? 'rotateX(90deg)' : 'rotateX(0deg)',
+	};
+
+	return <span style={style}>{displayValue}</span>;
 }
 
 function TimeRangeSelector({ timeRange, onTimeRangeChange }) {
@@ -164,6 +193,7 @@ function App() {
 	const [visibleMetrics, setVisibleMetrics] = React.useState(
 		Object.fromEntries(Object.entries(sensorMetrics).map(([key, value]) => [key, value.visible]))
 	);
+	const [animatingMetrics, setAnimatingMetrics] = React.useState({});
 
 	const svgRef = React.useRef(null);
 	const [currentVersion, setCurrentVersion] = React.useState(null);
@@ -244,7 +274,19 @@ function App() {
 				ts: new Date(d.ts)
 			}));
 
-			setData(processedData);
+			setData(prevData => {
+				if (prevData.length > 0) {
+					const newAnimatingMetrics = {};
+					Object.keys(sensorMetrics).forEach(metric => {
+						if (processedData[processedData.length - 1][metric] !== prevData[prevData.length - 1][metric]) {
+							newAnimatingMetrics[metric] = true;
+						}
+					});
+					setAnimatingMetrics(newAnimatingMetrics);
+					setTimeout(() => setAnimatingMetrics({}), 1000);
+				}
+				return processedData;
+			});
 		} catch (error) {
 			console.error('Error fetching or processing data:', error);
 		}
@@ -318,6 +360,7 @@ function App() {
 						value={data.length > 0 ? data[data.length - 1][metric].toFixed(1) : 'N/A'} 
 						visible={visibleMetrics[metric]}
 						onToggle={toggleChartSeries}
+						isAnimating={animatingMetrics[metric]}
 					/>
 				))}
 			</div>
