@@ -218,9 +218,23 @@ function App() {
 
 		const margin = { top: 20, right: 20, bottom: 30, left: 50 };
 		const width = svgRef.current.clientWidth - margin.left - margin.right;
-		const height = svgRef.current.clientHeight - margin.top - margin.bottom;
+		let height = svgRef.current.clientHeight - margin.top - margin.bottom;
 
 		d3.select(svgRef.current).selectAll("*").remove();
+
+		const visibleMetricKeys = Object.keys(sensorMetrics).filter(metric => visibleMetrics[metric]);
+
+		const y = d3.scaleLinear()
+			.domain([
+				d3.min(data, d => Math.min(...visibleMetricKeys.map(metric => d[metric]))),
+				d3.max(data, d => Math.max(...visibleMetricKeys.map(metric => d[metric])))
+			]);
+
+		// Adjust height based on the number of visible metrics
+		const minHeight = 200; // Minimum height for the chart
+		const heightPerMetric = 100; // Additional height per metric
+		height = Math.max(minHeight, visibleMetricKeys.length * heightPerMetric);
+		y.range([height, 0]);
 
 		const svg = d3.select(svgRef.current)
 			.append("svg")
@@ -233,13 +247,6 @@ function App() {
 			.domain(d3.extent(data, d => d.ts))
 			.range([0, width]);
 
-		const y = d3.scaleLinear()
-			.domain([
-				d3.min(data, d => Math.min(...Object.keys(sensorMetrics).map(metric => d[metric]))),
-				d3.max(data, d => Math.max(...Object.keys(sensorMetrics).map(metric => d[metric])))
-			])
-			.range([height, 0]);
-
 		svg.append("g")
 			.attr("transform", `translate(0,${height})`)
 			.call(d3.axisBottom(x));
@@ -247,19 +254,17 @@ function App() {
 		svg.append("g")
 			.call(d3.axisLeft(y));
 
-		Object.keys(sensorMetrics).forEach(metric => {
-			if (visibleMetrics[metric]) {
-				const line = d3.line()
-					.x(d => x(d.ts))
-					.y(d => y(d[metric]));
+		visibleMetricKeys.forEach(metric => {
+			const line = d3.line()
+				.x(d => x(d.ts))
+				.y(d => y(d[metric]));
 
-				svg.append("path")
-					.datum(data)
-					.attr("fill", "none")
-					.attr("stroke", sensorMetrics[metric].gaugeColor)
-					.attr("stroke-width", 1.5)
-					.attr("d", line);
-			}
+			svg.append("path")
+				.datum(data)
+				.attr("fill", "none")
+				.attr("stroke", sensorMetrics[metric].gaugeColor)
+				.attr("stroke-width", 1.5)
+				.attr("d", line);
 		});
 	}
 
