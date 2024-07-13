@@ -101,7 +101,7 @@ function calculateHeatIndex(tempCelsius, relativeHumidity) {
 	return Number(((hi - 32) / 1.8).toFixed(1));
 }
 
-function Gauge({ metric, value }) {
+function Gauge({ metric, value, onToggle }) {
 	const { label, unit, gaugeColor, visible } = sensorMetrics[metric];
 	const style = {
 		opacity: visible ? 1 : 0.5,
@@ -110,7 +110,7 @@ function Gauge({ metric, value }) {
 	};
 
 	return (
-		<div className="bg-white p-4 rounded-lg shadow" style={style} onClick={() => toggleChartSeries(metric)}>
+		<div className="bg-white p-4 rounded-lg shadow" style={style} onClick={() => onToggle(metric)}>
 			<div className="text-lg font-semibold" style={{ color: gaugeColor }}>{value}{unit}</div>
 			<div className="text-sm text-gray-500">{label}</div>
 		</div>
@@ -304,7 +304,12 @@ function App() {
 		<div className="container mx-auto px-4 py-8 h-screen flex flex-col">
 			<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
 				{Object.keys(sensorMetrics).map(metric => (
-					<Gauge key={metric} metric={metric} value={data.length > 0 ? data[data.length - 1][metric].toFixed(1) : 'N/A'} />
+					<Gauge 
+						key={metric} 
+						metric={metric} 
+						value={data.length > 0 ? data[data.length - 1][metric].toFixed(1) : 'N/A'} 
+						onToggle={toggleChartSeries}
+					/>
 				))}
 			</div>
 
