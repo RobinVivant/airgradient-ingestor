@@ -219,7 +219,13 @@ function App() {
 		if (data.length > 0) {
 			updateChart();
 		}
-	}, [data, visibleMetrics, brushExtent]);
+	}, [data, visibleMetrics]);
+
+	React.useEffect(() => {
+		if (brushExtent) {
+			fetchDataAndUpdateChart();
+		}
+	}, [brushExtent]);
 
 	async function fetchVersion() {
 		try {
@@ -238,16 +244,18 @@ function App() {
 	async function fetchDataAndUpdateChart() {
 		let start, end;
 
-		if (timeRange === 'custom' && startDate && endDate) {
-			start = new Date(startDate).getTime();
-			end = new Date(endDate).getTime();
+		if (brushExtent) {
+			[start, end] = brushExtent;
+		} else if (timeRange === 'custom' && startDate && endDate) {
+			start = new Date(startDate);
+			end = new Date(endDate);
 		} else {
-			end = Date.now();
-			start = end - getTimeRangeInMs(timeRange);
+			end = new Date();
+			start = new Date(end - getTimeRangeInMs(timeRange));
 		}
 
 		try {
-			const response = await fetch(`/sensors/${sensorId}?start=${Math.round(start / 1000)}&end=${Math.round(end / 1000)}`);
+			const response = await fetch(`/sensors/${sensorId}?start=${Math.round(start.getTime() / 1000)}&end=${Math.round(end.getTime() / 1000)}`);
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
@@ -363,7 +371,9 @@ function App() {
 
 		function brushended(event) {
 			if (!event.selection) {
+				if (!brushExtent) return;
 				setBrushExtent(null);
+				setTimeRange('1h');
 				return;
 			}
 			const [x0, x1] = event.selection.map(x.invert);
@@ -371,11 +381,11 @@ function App() {
 			setTimeRange('custom');
 			setStartDate(x0.toLocaleString());
 			setEndDate(x1.toLocaleString());
-			
-			// Update the chart with the new brush extent
-			x.domain([x0, x1]);
-			svg.select(".brush").call(brush.move, null); // Clear the brush
-			updateChart();
+		}
+
+		// If there's an active brush extent, update the brush
+		if (brushExtent) {
+			svg.select(".brush").call(brush.move, brushExtent.map(x));
 		}
 	}
 
