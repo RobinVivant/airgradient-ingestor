@@ -54,19 +54,22 @@ const sensorMetrics = {
 };
 
 function getTimeRangeInMs(timeRange) {
-	const hour = 60 * 60 * 1000;
+	const minute = 60 * 1000;
+	const hour = 60 * minute;
 	const day = 24 * hour;
 	switch (timeRange) {
-		case '1h':
-			return hour;
-		case '24h':
-			return day;
-		case '7d':
-			return 7 * day;
-		case '30d':
-			return 30 * day;
-		default:
-			return hour;
+		case '15m': return 15 * minute;
+		case '30m': return 30 * minute;
+		case '1h': return hour;
+		case '3h': return 3 * hour;
+		case '6h': return 6 * hour;
+		case '12h': return 12 * hour;
+		case '24h': return day;
+		case '2d': return 2 * day;
+		case '7d': return 7 * day;
+		case '14d': return 14 * day;
+		case '30d': return 30 * day;
+		default: return hour;
 	}
 }
 
@@ -151,26 +154,41 @@ function RotatingNumber({ value }) {
 }
 
 function TimeRangeSelector({ timeRange, onTimeRangeChange, startDate, endDate, onStartDateChange, onEndDateChange }) {
+	const timeRanges = [
+		{ value: '15m', label: '15m' },
+		{ value: '30m', label: '30m' },
+		{ value: '1h', label: '1h' },
+		{ value: '3h', label: '3h' },
+		{ value: '6h', label: '6h' },
+		{ value: '12h', label: '12h' },
+		{ value: '24h', label: '24h' },
+		{ value: '2d', label: '2d' },
+		{ value: '7d', label: '7d' },
+		{ value: '14d', label: '14d' },
+		{ value: '30d', label: '30d' },
+		{ value: 'custom', label: 'Custom' }
+	];
+
 	return (
-		<div className="w-full flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
-			<div className="w-full md:w-auto">
-				<label htmlFor="timeRange" className="block text-sm font-medium text-gray-700 mb-1">Time Range:</label>
-				<select
-					id="timeRange"
-					value={timeRange}
-					onChange={(e) => onTimeRangeChange(e.target.value)}
-					className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-				>
-					<option value="1h">Last Hour</option>
-					<option value="24h">Last 24 Hours</option>
-					<option value="7d">Last 7 Days</option>
-					<option value="30d">Last 30 Days</option>
-					<option value="custom">Custom Range</option>
-				</select>
+		<div className="w-full space-y-4">
+			<div className="flex flex-wrap gap-2">
+				{timeRanges.map(({ value, label }) => (
+					<button
+						key={value}
+						onClick={() => onTimeRangeChange(value)}
+						className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 ${
+							timeRange === value
+								? 'bg-indigo-600 text-white'
+								: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+						}`}
+					>
+						{label}
+					</button>
+				))}
 			</div>
 			{timeRange === 'custom' && (
-				<>
-					<div className="w-full md:w-auto">
+				<div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+					<div className="w-full md:w-1/2">
 						<label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">Start Date:</label>
 						<input
 							id="startDate"
@@ -180,7 +198,7 @@ function TimeRangeSelector({ timeRange, onTimeRangeChange, startDate, endDate, o
 							className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
 						/>
 					</div>
-					<div className="w-full md:w-auto">
+					<div className="w-full md:w-1/2">
 						<label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">End Date:</label>
 						<input
 							id="endDate"
@@ -190,7 +208,7 @@ function TimeRangeSelector({ timeRange, onTimeRangeChange, startDate, endDate, o
 							className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
 						/>
 					</div>
-				</>
+				</div>
 			)}
 		</div>
 	);
