@@ -221,7 +221,7 @@ function TimeRangeSelector({ timeRange, onTimeRangeChange, startDate, endDate, o
 
 function App() {
 	const [data, setData] = React.useState([]);
-	const [timeRange, setTimeRange] = React.useState('1h');
+	const [timeRange, setTimeRange] = React.useState('12h');
 	const [startDate, setStartDate] = React.useState('');
 	const [endDate, setEndDate] = React.useState('');
 	const [visibleMetrics, setVisibleMetrics] = React.useState(
@@ -430,7 +430,7 @@ function App() {
 			})
 			.on("mousemove touchmove", (event) => {
 				event.preventDefault();
-				const [xPos] = d3.pointer(event.type.startsWith('touch') ? event.touches[0] : event, this);
+				const [xPos] = d3.pointer(event.type.startsWith('touch') ? event.touches[0] : event, svg.node());
 				verticalLine.attr("x1", xPos).attr("x2", xPos);
 
 				const x0 = x.invert(xPos);
