@@ -551,7 +551,7 @@ function App() {
 					</button>
 				</div>
 			)}
-			<div className="grid grid-cols-4 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8 mx-4">
+			<div className="grid grid-cols-4 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8 mx-6">
 				{Object.keys(sensorMetrics).map(metric => (
 					<Gauge
 						key={metric}
