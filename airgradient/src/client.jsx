@@ -356,7 +356,7 @@ function App() {
 	function updateChart() {
 		if (!svgRef.current || data.length === 0 || chartDimensions.width === 0 || chartDimensions.height === 0) return;
 
-		const margin = { top: 20, right: 50, bottom: 50, left: 50 };
+		const margin = { top: 20, right: 10, bottom: 30, left: 60 };
 		const width = chartDimensions.width - margin.left - margin.right;
 		const height = chartDimensions.height - margin.top - margin.bottom;
 
@@ -396,7 +396,7 @@ function App() {
 			.style('text-anchor', 'end')
 			.attr('dx', '-.8em')
 			.attr('dy', '.15em')
-			.attr('transform', 'rotate(-25)')
+			.attr('transform', 'rotate(-45)')
 			.style('font-size', '10px');
 
 		svg.append('g')
