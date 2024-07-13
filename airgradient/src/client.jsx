@@ -517,7 +517,7 @@ function App() {
 
 
 	return (
-		<div className="container mx-auto px-4 py-4 sm:py-8 h-screen flex flex-col">
+		<div className="container mx-auto px-4 py-4 sm:py-8 h-screen flex flex-col overflow-hidden">
 			{weatherPrediction && (
 				<div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-2 mb-4" role="alert">
 					<p className="font-bold">Weather Prediction: {weatherPrediction}</p>
@@ -559,8 +559,8 @@ function App() {
 				/>
 			</div>
 
-			<div id="chartContainer" ref={chartContainerRef} className="bg-white pt-0 px-4 pb-4 rounded-lg shadow flex-grow"
-					 style={{ height: 'calc(max(500px, 100vh - 300px))' }}>
+			<div id="chartContainer" ref={chartContainerRef} className="bg-white pt-0 px-4 pb-4 rounded-lg shadow flex-grow overflow-hidden"
+					 style={{ height: 'calc(100vh - 300px)' }}>
 				<svg ref={svgRef}></svg>
 			</div>
 		</div>
