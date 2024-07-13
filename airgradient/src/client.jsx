@@ -130,7 +130,9 @@ function Gauge({ metric, value, visible, onToggle, isAnimating }) {
 	};
 
 	const displayValue = value !== 'N/A' ?
-		(metric === 'pressure' ? parseFloat(value).toFixed(0) : parseFloat(value).toFixed(1))
+		(metric === 'pressure' || metric === 'rco2' || metric === 'pm02' || metric === 'tvoc_index' || metric === 'nox_index' ?
+			Number.isInteger(parseFloat(value)) ? parseInt(value) : parseFloat(value).toFixed(1)
+		: parseFloat(value).toFixed(1))
 		: 'N/A';
 
 	return (
