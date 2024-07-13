@@ -533,7 +533,10 @@ function App() {
 		<div className="container mx-auto px-4 py-4 sm:py-8 h-screen flex flex-col overflow-hidden">
 			{weatherPrediction && (
 				<div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-2 mb-4" role="alert">
-					<p className="font-bold">{weatherPrediction}</p>
+					<p className="font-bold">
+						<span className="text-2xl mr-2">{weatherPrediction.icon}</span>
+						{weatherPrediction.text}
+					</p>
 				</div>
 			)}
 			{newVersionAvailable && (

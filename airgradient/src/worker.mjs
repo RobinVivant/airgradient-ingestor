@@ -7,12 +7,18 @@ const app = new Hono();
 
 function predictWeather(pastDayData) {
     const predictions = [
-        "Settled fine", "Fine weather", "Becoming fine",
-        "Fine, becoming less settled", "Fine, possible showers",
-        "Fairly fine, improving", "Fairly fine, possible showers",
-        "Showery, becoming more unsettled", "Unsettled, rain later",
-        "Unsettled, rain at times", "Rain at times, worse later",
-        "Rain at times, becoming very unsettled"
+        { text: "Settled fine", icon: "☀️" },
+        { text: "Fine weather", icon: "🌤️" },
+        { text: "Becoming fine", icon: "⛅" },
+        { text: "Fine, becoming less settled", icon: "🌥️" },
+        { text: "Fine, possible showers", icon: "🌦️" },
+        { text: "Fairly fine, improving", icon: "🌤️" },
+        { text: "Fairly fine, possible showers", icon: "🌦️" },
+        { text: "Showery, becoming more unsettled", icon: "🌧️" },
+        { text: "Unsettled, rain later", icon: "🌨️" },
+        { text: "Unsettled, rain at times", icon: "🌧️" },
+        { text: "Rain at times, worse later", icon: "🌧️" },
+        { text: "Rain at times, becoming very unsettled", icon: "⛈️" }
     ];
 
     // Calculate trends
@@ -165,7 +171,10 @@ app.get('/sensors/:id', async c => {
 		return c.json({
 			version: c.env.APP_VERSION,
 			data: processedData,
-			weatherPrediction: weatherPrediction
+			weatherPrediction: {
+				text: weatherPrediction.text,
+				icon: weatherPrediction.icon
+			}
 		});
 
 		function calculateAirQualityIndex(pm25, co2, nox) {
