@@ -1,3 +1,4 @@
+/** @jsxRuntime classic */
 /** @jsx React.createElement */
 const sensorId = '{{__sensorId__}}';
 

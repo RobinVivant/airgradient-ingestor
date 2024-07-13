@@ -23,6 +23,7 @@ export default {
 		babel({
 			babelHelpers: 'bundled',
 			presets: ['@babel/preset-react'],
+			plugins: ['@babel/plugin-transform-react-jsx'],
 			extensions: ['.js', '.jsx'],
 			exclude: 'node_modules/**'
 		}),
