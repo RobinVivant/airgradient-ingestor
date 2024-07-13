@@ -200,8 +200,8 @@ function App() {
 	const [animatingMetrics, setAnimatingMetrics] = React.useState({});
 
 	const svgRef = React.useRef(null);
+	const brushRef = React.useRef(null);
 	const [currentVersion, setCurrentVersion] = React.useState(null);
-
 
 	React.useEffect(() => {
 		if (data.length > 0 && svgRef.current) {
@@ -218,6 +218,42 @@ function App() {
 		window.addEventListener('resize', handleResize);
 		return () => window.removeEventListener('resize', handleResize);
 	}, [data, visibleMetrics, timeRange]);
+
+	React.useEffect(() => {
+		if (svgRef.current && data.length > 0) {
+			const svg = d3.select(svgRef.current);
+			const width = svgRef.current.clientWidth;
+			const height = svgRef.current.clientHeight;
+			const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+
+			const brush = d3.brushX()
+				.extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]])
+				.on("end", brushended);
+
+			brushRef.current = brush;
+
+			svg.append("g")
+				.attr("class", "brush")
+				.call(brush);
+
+			function brushended(event) {
+				if (!event.selection) {
+					console.log("Brush selection cleared");
+					return;
+				}
+				const [x0, x1] = event.selection.map(d => x.invert(d - margin.left));
+				setTimeRange('custom');
+				setStartDate(x0.toLocaleString());
+				setEndDate(x1.toLocaleString());
+				
+				svg.select(".brush").call(brush.move, null);
+				
+				requestAnimationFrame(() => {
+					fetchDataAndUpdateChart();
+				});
+			}
+		}
+	}, [data]);
 
 	React.useEffect(() => {
 		const fetchDataAndVersion = async () => {
@@ -368,29 +404,10 @@ function App() {
 				.attr("d", line);
 		});
 
-		// Add brush functionality
-		const brush = d3.brushX()
-			.extent([[0, 0], [width, height]])
-			.on("end", brushended);
-
-		svg.append("g")
-			.attr("class", "brush")
-			.call(brush);
-
-		function brushended(event) {
-			if (!event.selection) return;
-			const [x0, x1] = event.selection.map(x.invert);
-			setTimeRange('custom');
-			setStartDate(x0.toLocaleString(undefined, {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}));
-			setEndDate(x1.toLocaleString(undefined, {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}));
-			
-			// Clear the brush selection
-			svg.select(".brush").call(brush.move, null);
-			
-			// Use requestAnimationFrame to ensure the brush is cleared before fetching data
-			requestAnimationFrame(() => {
-				fetchDataAndUpdateChart();
-			});
+		// Update brush
+		if (brushRef.current) {
+			svg.select(".brush")
+				.call(brushRef.current.move, null);
 		}
 	}
 
