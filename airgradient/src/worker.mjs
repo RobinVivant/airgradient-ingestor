@@ -101,12 +101,18 @@ app.get('/sensors/:id', async c => {
 	});
 
 	if (queryResponse.status !== 200) {
-		console.error('Error querying:', await queryResponse.text());
-		return c.json({ error: 'An error occurred while fetching data' }, 500);
+		const errorText = await queryResponse.text();
+		console.error('Error querying:', errorText);
+		return c.json({ error: 'An error occurred while fetching data', details: errorText }, 500);
 	}
 
-	const queryJSON = await queryResponse.json();
-	return c.json(queryJSON.data);
+	try {
+		const queryJSON = await queryResponse.json();
+		return c.json(queryJSON.data);
+	} catch (error) {
+		console.error('Error parsing JSON:', error);
+		return c.json({ error: 'An error occurred while parsing data', details: error.message }, 500);
+	}
 });
 
 app.get('/sensors/:id/chart', async c => {
