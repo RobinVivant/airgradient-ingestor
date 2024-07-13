@@ -5,8 +5,7 @@ import clientJs from './client.jsx';
 import clientHtml from './client.html';
 const app = new Hono();
 
-function predictWeather(pressure, pressureTrend, temperature, humidity) {
-    // Enhanced Zambretti-inspired algorithm
+function predictWeather(pastDayData) {
     const predictions = [
         "Settled fine", "Fine weather", "Becoming fine",
         "Fine, becoming less settled", "Fine, possible showers",
@@ -16,8 +15,15 @@ function predictWeather(pressure, pressureTrend, temperature, humidity) {
         "Rain at times, becoming very unsettled"
     ];
 
-    // Adjust pressure to sea level
-    const seaLevelPressure = pressure;  // Already at sea level
+    // Calculate trends
+    const pressureTrend = pastDayData[pastDayData.length - 1].pressure - pastDayData[0].pressure;
+    const temperatureTrend = pastDayData[pastDayData.length - 1].atmp - pastDayData[0].atmp;
+    const humidityTrend = pastDayData[pastDayData.length - 1].rhum - pastDayData[0].rhum;
+
+    // Get current values
+    const currentPressure = pastDayData[pastDayData.length - 1].pressure;
+    const currentTemperature = pastDayData[pastDayData.length - 1].atmp;
+    const currentHumidity = pastDayData[pastDayData.length - 1].rhum;
 
     // Get current date
     const currentDate = new Date();
@@ -31,16 +37,24 @@ function predictWeather(pressure, pressureTrend, temperature, humidity) {
     else season = "winter";
 
     // Calculate base index
-    let index = Math.floor((seaLevelPressure - 950) / 10);
+    let index = Math.floor((currentPressure - 950) / 10);
     index = Math.max(0, Math.min(index, 11));
 
     // Adjust for pressure trend
-    if (pressureTrend > 0) index -= 2;
-    else if (pressureTrend < 0) index += 2;
+    if (pressureTrend > 2) index -= 2;
+    else if (pressureTrend < -2) index += 2;
 
-    // Adjust for temperature and humidity
-    if (temperature > 25 && humidity > 70) index += 1;  // Hot and humid
-    else if (temperature < 10 && humidity > 80) index += 1;  // Cold and damp
+    // Adjust for temperature trend
+    if (temperatureTrend > 5) index -= 1;
+    else if (temperatureTrend < -5) index += 1;
+
+    // Adjust for humidity trend
+    if (humidityTrend > 10) index += 1;
+    else if (humidityTrend < -10) index -= 1;
+
+    // Adjust for current conditions
+    if (currentTemperature > 25 && currentHumidity > 70) index += 1;  // Hot and humid
+    else if (currentTemperature < 10 && currentHumidity > 80) index += 1;  // Cold and damp
 
     // Seasonal adjustments
     if (season === "summer" && index < 4) index += 1;  // More likely to be unsettled in summer
@@ -97,39 +111,15 @@ app.post('/sensors/:id/measures',
 
 app.get('/sensors/:id', async c => {
 	const { id } = c.req.param();
-	let start = parseInt(c.req.query('start')) || (Date.now() - 60 * 60 * 1000) / 1000;
+	let start = parseInt(c.req.query('start')) || (Date.now() - 24 * 60 * 60 * 1000) / 1000; // Default to 24 hours ago
 	let end = parseInt(c.req.query('end')) || (Date.now() / 1000);
 
 	start = Math.round(start);
 	end = Math.round(end);
 
-	const timeRange = end - start;
-	let interval;
-
-	if (timeRange > 30 * 24 * 60 * 60) { // More than 30 days
-		interval = '1 hour';
-	} else if (timeRange > 7 * 24 * 60 * 60) { // More than 7 days
-		interval = '15 minute';
-	} else if (timeRange > 24 * 60 * 60) { // More than 1 day
-		interval = '5 minute';
-	} else {
-		interval = '1 minute';
-	}
-
-	let intervalFunction;
-	if (interval === '1 hour') {
-		intervalFunction = 'toDateTime(intDiv(toUInt32(timestamp), 3600) * 3600)';
-	} else if (interval === '15 minute') {
-		intervalFunction = 'toDateTime(intDiv(toUInt32(timestamp), 900) * 900)';
-	} else if (interval === '5 minute') {
-		intervalFunction = 'toDateTime(intDiv(toUInt32(timestamp), 300) * 300)';
-	} else { // 1 minute
-		intervalFunction = 'toDateTime(intDiv(toUInt32(timestamp), 60) * 60)';
-	}
-
 	const query = `
 		SELECT
-			${intervalFunction} AS ts,
+			toDateTime(intDiv(toUInt32(timestamp), 900) * 900) AS ts,
 			avg(double1) AS wifi,
 			avg(double2) AS rco2,
 			avg(double3) AS pm02,
@@ -164,22 +154,8 @@ app.get('/sensors/:id', async c => {
 		const queryJSON = await queryResponse.json();
 		const data = queryJSON.data;
 
-		// Calculate pressure trend
-		let pressureTrend = 0;
-		if (data.length > 1) {
-			const lastPressure = data[data.length - 1].pressure;
-			const firstPressure = data[0].pressure;
-			pressureTrend = lastPressure - firstPressure;
-		}
-
-		// Get the latest readings
-		const latestData = data.length > 0 ? data[data.length - 1] : { pressure: 1013, atmp: 20, rhum: 50 };
-		const latestPressure = latestData.pressure;
-		const latestTemperature = latestData.atmp;
-		const latestHumidity = latestData.rhum;
-
-		// Predict weather
-		const weatherPrediction = predictWeather(latestPressure, pressureTrend, latestTemperature, latestHumidity);
+		// Predict weather for the next 24 hours
+		const weatherPrediction = predictWeather(data);
 
 		return c.json({
 			version: c.env.APP_VERSION,
