@@ -274,6 +274,7 @@ function App() {
 			const response = await fetch('/version');
 			const { version } = await response.json();
 			if (currentVersion && currentVersion !== version) {
+				console.log('New version detected. Refreshing the page...');
 				window.location.reload();
 			} else {
 				setCurrentVersion(version);
