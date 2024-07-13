@@ -5,8 +5,8 @@ import clientJs from './client.jsx';
 import clientHtml from './client.html';
 const app = new Hono();
 
-function predictWeather(pressure, pressureTrend) {
-    // Simplified Zambretti-inspired algorithm
+function predictWeather(pressure, pressureTrend, temperature, humidity) {
+    // Enhanced Zambretti-inspired algorithm
     const predictions = [
         "Settled fine", "Fine weather", "Becoming fine",
         "Fine, becoming less settled", "Fine, possible showers",
@@ -16,11 +16,35 @@ function predictWeather(pressure, pressureTrend) {
         "Rain at times, becoming very unsettled"
     ];
 
-    let index = Math.floor((pressure - 950) / 10);
+    // Adjust pressure to sea level
+    const seaLevelPressure = pressure;  // Already at sea level
+
+    // Get current date
+    const currentDate = new Date();
+    const month = currentDate.getMonth();  // 0-11
+
+    // Determine season (Northern Hemisphere)
+    let season;
+    if (month >= 2 && month <= 4) season = "spring";
+    else if (month >= 5 && month <= 7) season = "summer";
+    else if (month >= 8 && month <= 10) season = "autumn";
+    else season = "winter";
+
+    // Calculate base index
+    let index = Math.floor((seaLevelPressure - 950) / 10);
     index = Math.max(0, Math.min(index, 11));
 
+    // Adjust for pressure trend
     if (pressureTrend > 0) index -= 2;
     else if (pressureTrend < 0) index += 2;
+
+    // Adjust for temperature and humidity
+    if (temperature > 25 && humidity > 70) index += 1;  // Hot and humid
+    else if (temperature < 10 && humidity > 80) index += 1;  // Cold and damp
+
+    // Seasonal adjustments
+    if (season === "summer" && index < 4) index += 1;  // More likely to be unsettled in summer
+    else if (season === "winter" && index > 8) index -= 1;  // More likely to be settled in winter
 
     index = Math.max(0, Math.min(index, 11));
 
@@ -148,11 +172,14 @@ app.get('/sensors/:id', async c => {
 			pressureTrend = lastPressure - firstPressure;
 		}
 
-		// Get the latest pressure reading
-		const latestPressure = data.length > 0 ? data[data.length - 1].pressure : 1013;
+		// Get the latest readings
+		const latestData = data.length > 0 ? data[data.length - 1] : { pressure: 1013, atmp: 20, rhum: 50 };
+		const latestPressure = latestData.pressure;
+		const latestTemperature = latestData.atmp;
+		const latestHumidity = latestData.rhum;
 
 		// Predict weather
-		const weatherPrediction = predictWeather(latestPressure, pressureTrend);
+		const weatherPrediction = predictWeather(latestPressure, pressureTrend, latestTemperature, latestHumidity);
 
 		return c.json({
 			version: c.env.APP_VERSION,
