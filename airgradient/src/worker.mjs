@@ -76,9 +76,20 @@ app.get('/sensors/:id', async c => {
 		interval = '1 minute';
 	}
 
+	let intervalFunction;
+	if (interval === '1 hour') {
+		intervalFunction = 'toStartOfHour(timestamp)';
+	} else if (interval === '15 minute') {
+		intervalFunction = 'toDateTime(intDiv(toUInt32(timestamp), 900) * 900)';
+	} else if (interval === '5 minute') {
+		intervalFunction = 'toDateTime(intDiv(toUInt32(timestamp), 300) * 300)';
+	} else { // 1 minute
+		intervalFunction = 'toStartOfMinute(timestamp)';
+	}
+
 	const query = `
 		SELECT
-			toStartOfInterval(timestamp, INTERVAL ${interval}) AS ts,
+			${intervalFunction} AS ts,
 			avg(double1) AS wifi,
 			avg(double2) AS rco2,
 			avg(double3) AS pm02,
