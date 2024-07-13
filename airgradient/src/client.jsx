@@ -10,7 +10,7 @@ const sensorMetrics = {
 		visible: true
 	},
 	feltTemp: {
-		label: 'Felt Temperature',
+		label: 'Felt Temp',
 		unit: '°C',
 		gaugeColor: '#FF8C00',
 		visible: true
