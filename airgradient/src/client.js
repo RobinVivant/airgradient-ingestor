@@ -1,7 +1,5 @@
 const sensorId = '{{__sensorId__}}';
 
-let chart;
-
 const sensorMetrics = {
 	atmp: {
 		label: 'Temperature',
@@ -53,91 +51,6 @@ const sensorMetrics = {
 	}
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-	setupEventListeners();
-	fetchDataAndUpdateChart();
-	startAutoUpdate();
-	window.addEventListener('resize', debounce(() => {
-		if (chart) {
-			chart.resize();
-		}
-	}, 250));
-});
-
-function setupEventListeners() {
-	const timeRangeElement = document.getElementById('timeRange');
-
-	if (timeRangeElement) {
-		timeRangeElement.addEventListener('change', handleTimeRangeChange);
-	} else {
-		console.error('Time range element not found');
-	}
-
-	// Set up gauge divs as toggle buttons
-	Object.keys(sensorMetrics).forEach(metric => {
-		const gaugeElement = document.getElementById(`${metric}Gauge`);
-		if (gaugeElement) {
-			gaugeElement.addEventListener('click', () => toggleChartSeries(metric));
-			gaugeElement.style.cursor = 'pointer';
-			updateGaugeAppearance(metric, sensorMetrics[metric].visible);
-		}
-	});
-
-	// Remove the update button from the HTML
-	const updateButtonElement = document.getElementById('updateButton');
-	if (updateButtonElement) {
-		updateButtonElement.remove();
-	}
-}
-
-function toggleChartSeries(metric) {
-	sensorMetrics[metric].visible = !sensorMetrics[metric].visible;
-	updateGaugeAppearance(metric, sensorMetrics[metric].visible);
-	if (chart) {
-		const datasetIndex = chart.data.datasets.findIndex(dataset => dataset.label === sensorMetrics[metric].label);
-		if (datasetIndex > -1) {
-			chart.setDatasetVisibility(datasetIndex, sensorMetrics[metric].visible);
-			chart.update();
-		}
-	}
-}
-
-function updateGaugeAppearance(metric, isVisible) {
-	const gaugeElement = document.getElementById(`${metric}Gauge`);
-	if (gaugeElement) {
-		gaugeElement.style.opacity = isVisible ? '1' : '0.5';
-		gaugeElement.style.filter = isVisible ? 'none' : 'grayscale(100%)';
-	}
-}
-
-function handleTimeRangeChange() {
-	const timeRange = document.getElementById('timeRange');
-	const customDateRange = document.getElementById('customDateRange');
-
-	if (timeRange && customDateRange) {
-		customDateRange.style.display = timeRange.value === 'custom' ? 'block' : 'none';
-		if (timeRange.value !== 'custom') {
-			fetchDataAndUpdateChart();
-		}
-	} else {
-		console.error('Time range or custom date range elements not found');
-	}
-}
-
-let updateInterval;
-
-function startAutoUpdate() {
-	// Clear any existing interval
-	if (updateInterval) {
-		clearInterval(updateInterval);
-	}
-
-	// Set new interval to update every 30 seconds
-	updateInterval = setInterval(() => {
-		fetchDataAndUpdateChart();
-	}, 30000);
-}
-
 function getTimeRangeInMs(timeRange) {
 	const hour = 60 * 60 * 1000;
 	const day = 24 * hour;
@@ -155,38 +68,6 @@ function getTimeRangeInMs(timeRange) {
 	}
 }
 
-async function fetchDataAndUpdateChart() {
-	const timeRange = document.getElementById('timeRange');
-	const startDate = document.getElementById('startDate');
-	const endDate = document.getElementById('endDate');
-
-	let start, end;
-
-	if (timeRange.value === 'custom' && startDate && endDate) {
-		start = new Date(startDate.value).getTime();
-		end = new Date(endDate.value).getTime();
-	} else {
-		end = Date.now();
-		start = end - getTimeRangeInMs(timeRange.value);
-	}
-
-	try {
-		const response = await fetch(`/sensors/${sensorId}?start=${Math.round(start / 1000)}&end=${Math.round(end / 1000)}`);
-		const data = await response.json();
-
-		const reducedData = reduceDataPoints(data, 100); // Reduce to about 100 data points
-		const processedData = reducedData.map(d => ({
-			...d,
-			feltTemp: calculateHeatIndex(d.atmp, d.rhum)
-		}));
-
-		updateGauges(processedData[processedData.length - 1]);
-		updateChart(processedData);
-	} catch (error) {
-		console.error('Error fetching or processing data:', error);
-	}
-}
-
 function reduceDataPoints(data, targetPoints) {
 	if (data.length <= targetPoints) return data;
 
@@ -195,8 +76,7 @@ function reduceDataPoints(data, targetPoints) {
 }
 
 function calculateHeatIndex(tempCelsius, relativeHumidity) {
-	// Optimized Heat Index calculation
-	const t = tempCelsius * 1.8 + 32; // Convert to Fahrenheit
+	const t = tempCelsius * 1.8 + 32;
 	const r = relativeHumidity;
 
 	let hi = 0.5 * (t + 61 + (t - 68) * 1.2 + r * 0.094);
@@ -216,182 +96,233 @@ function calculateHeatIndex(tempCelsius, relativeHumidity) {
 		}
 	}
 
-	return Number(((hi - 32) / 1.8).toFixed(1)); // Convert back to Celsius
+	return Number(((hi - 32) / 1.8).toFixed(1));
 }
 
-function updateGauges(latestData) {
-	Object.keys(sensorMetrics).forEach(metric => {
-		const gaugeElement = document.getElementById(`${metric}Gauge`);
-		if (gaugeElement) {
-			let value = 'N/A';
-			if (latestData[metric] !== undefined && latestData[metric] !== null) {
-				if (typeof latestData[metric] === 'number') {
-					value = latestData[metric].toFixed(1);
-				} else {
-					console.warn(`Metric ${metric} is not a number:`, latestData[metric]);
-					value = latestData[metric].toString();
-				}
-			}
-			updateGauge(gaugeElement, sensorMetrics[metric].label, `${value}${sensorMetrics[metric].unit}`);
+function Gauge({ metric, value }) {
+	const { label, unit, gaugeColor, visible } = sensorMetrics[metric];
+	const style = {
+		opacity: visible ? 1 : 0.5,
+		filter: visible ? 'none' : 'grayscale(100%)',
+		cursor: 'pointer',
+	};
+
+	return (
+		<div className="bg-white p-4 rounded-lg shadow" style={style} onClick={() => toggleChartSeries(metric)}>
+			<div className="text-lg font-semibold" style={{ color: gaugeColor }}>{value}{unit}</div>
+			<div className="text-sm text-gray-500">{label}</div>
+		</div>
+	);
+}
+
+function TimeRangeSelector({ timeRange, onTimeRangeChange }) {
+	return (
+		<div className="w-full md:w-auto mb-4 md:mb-0">
+			<label htmlFor="timeRange" className="block text-sm font-medium text-gray-700 mb-1">Time Range:</label>
+			<select
+				id="timeRange"
+				value={timeRange}
+				onChange={(e) => onTimeRangeChange(e.target.value)}
+				className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+			>
+				<option value="1h">Last Hour</option>
+				<option value="24h">Last 24 Hours</option>
+				<option value="7d">Last 7 Days</option>
+				<option value="30d">Last 30 Days</option>
+				<option value="custom">Custom Range</option>
+			</select>
+		</div>
+	);
+}
+
+function CustomDateRange({ startDate, endDate, onStartDateChange, onEndDateChange }) {
+	return (
+		<div className="w-full md:w-auto">
+			<input
+				type="datetime-local"
+				value={startDate}
+				onChange={(e) => onStartDateChange(e.target.value)}
+				className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mb-2 md:mb-0 md:mr-2"
+			/>
+			<input
+				type="datetime-local"
+				value={endDate}
+				onChange={(e) => onEndDateChange(e.target.value)}
+				className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+			/>
+		</div>
+	);
+}
+
+function App() {
+	const [data, setData] = React.useState([]);
+	const [timeRange, setTimeRange] = React.useState('1h');
+	const [startDate, setStartDate] = React.useState('');
+	const [endDate, setEndDate] = React.useState('');
+	const [chart, setChart] = React.useState(null);
+
+	const chartRef = React.useRef(null);
+
+	React.useEffect(() => {
+		fetchDataAndUpdateChart();
+		const interval = setInterval(fetchDataAndUpdateChart, 30000);
+		return () => clearInterval(interval);
+	}, [timeRange, startDate, endDate]);
+
+	React.useEffect(() => {
+		if (data.length > 0) {
+			updateChart();
+		}
+	}, [data]);
+
+	async function fetchDataAndUpdateChart() {
+		let start, end;
+
+		if (timeRange === 'custom' && startDate && endDate) {
+			start = new Date(startDate).getTime();
+			end = new Date(endDate).getTime();
 		} else {
-			console.warn(`Gauge element for ${metric} not found`);
+			end = Date.now();
+			start = end - getTimeRangeInMs(timeRange);
 		}
-	});
-}
 
-function updateGauge(gaugeElement, label, value) {
-	const metric = gaugeElement.id.replace('Gauge', '');
-	gaugeElement.innerHTML = `
-        <div class="text-lg font-semibold" style="color: ${sensorMetrics[metric].gaugeColor}">${value}</div>
-        <div class="text-sm text-gray-500">${label}</div>
-    `;
-}
+		try {
+			const response = await fetch(`/sensors/${sensorId}?start=${Math.round(start / 1000)}&end=${Math.round(end / 1000)}`);
+			const rawData = await response.json();
 
-function updateChart(data) {
-	const chartElement = document.getElementById('airQualityChart');
-	if (!chartElement) {
-		console.error('Chart element not found');
-		return;
+			const reducedData = reduceDataPoints(rawData, 100);
+			const processedData = reducedData.map(d => ({
+				...d,
+				feltTemp: calculateHeatIndex(d.atmp, d.rhum)
+			}));
+
+			setData(processedData);
+		} catch (error) {
+			console.error('Error fetching or processing data:', error);
+		}
 	}
 
-	const ctx = chartElement.getContext('2d');
+	function updateChart() {
+		if (!chartRef.current) return;
 
-	if (chart) {
-		chart.destroy();
-	}
+		const ctx = chartRef.current.getContext('2d');
 
-	chart = new Chart(ctx, {
-		type: 'line',
-		data: {
-			labels: data.map(d => new Date(d.ts)),
-			datasets: Object.keys(sensorMetrics).map(metric =>
-				createDataset(sensorMetrics[metric].label, data.map(d => {
-					const value = d[metric];
-					if (typeof value === 'number') {
-						return value;
-					} else if (typeof value === 'string') {
-						const parsed = parseFloat(value);
-						if (!isNaN(parsed)) {
-							return parsed;
-						}
-					}
-					console.warn(`Metric ${metric} is not a valid number:`, value);
-					return null;
-				}), sensorMetrics[metric].gaugeColor, !sensorMetrics[metric].visible)
-			)
-		},
-		options: {
-			responsive: true,
-			maintainAspectRatio: false,
-			animation: {
-				duration: 0 // Disable all animations
+		if (chart) {
+			chart.destroy();
+		}
+
+		const newChart = new Chart(ctx, {
+			type: 'line',
+			data: {
+				labels: data.map(d => new Date(d.ts)),
+				datasets: Object.keys(sensorMetrics).map(metric =>
+					createDataset(sensorMetrics[metric].label, data.map(d => d[metric]), sensorMetrics[metric].gaugeColor, !sensorMetrics[metric].visible)
+				)
 			},
-			hover: {
-				animationDuration: 0 // Disable animations on hover
-			},
-			responsiveAnimationDuration: 0, // Disable animations on resize
-			scales: {
-				x: {
-					type: 'time',
-					time: {
-						unit: 'hour',
-						displayFormats: {
-							hour: 'MMM d, HH:mm'
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				animation: { duration: 0 },
+				hover: { animationDuration: 0 },
+				responsiveAnimationDuration: 0,
+				scales: {
+					x: {
+						type: 'time',
+						time: {
+							unit: 'hour',
+							displayFormats: { hour: 'MMM d, HH:mm' },
+							tooltipFormat: 'MMM d, yyyy HH:mm'
 						},
-						tooltipFormat: 'MMM d, yyyy HH:mm'
-					},
-					title: {
-						display: false
-					},
-					ticks: {
-						source: 'auto',
-						autoSkip: true,
-						maxRotation: 0,
-						major: {
-							enabled: true
-						},
-						font: function(context) {
-							if (context.tick && context.tick.major) {
-								return {
-									weight: 'bold'
-								};
+						title: { display: false },
+						ticks: {
+							source: 'auto',
+							autoSkip: true,
+							maxRotation: 0,
+							major: { enabled: true },
+							font: function(context) {
+								if (context.tick && context.tick.major) {
+									return { weight: 'bold' };
+								}
 							}
+						},
+						adapters: {
+							date: { zone: 'local' }
 						}
 					},
-					adapters: {
-						date: {
-							zone: 'local' // This ensures local timezone is used
-						}
+					y: {
+						beginAtZero: false,
+						title: { display: false }
 					}
 				},
-				y: {
-					beginAtZero: false,
-					title: {
-						display: false
+				plugins: {
+					legend: { display: false },
+					tooltip: {
+						mode: 'index',
+						intersect: false,
+						animation: { duration: 0 }
 					}
-				}
-			},
-			plugins: {
-				legend: {
-					display: false // Remove the legend
 				},
-				tooltip: {
-					mode: 'index',
-					intersect: false,
-					animation: {
-						duration: 0 // Disable tooltip animations
-					}
-				}
-			},
-			elements: {
-				point: {
-					radius: 0
+				elements: {
+					point: { radius: 0 },
+					line: { borderWidth: 1 }
 				},
-				line: {
-					borderWidth: 1
-				}
-			},
-			transitions: {
-				active: {
-					animation: {
-						duration: 0 // Disable transitions when hovering
-					}
+				transitions: {
+					active: { animation: { duration: 0 } }
 				}
 			}
-		}
-	});
+		});
 
-	// Ensure chart visibility matches sensorMetrics visibility
-	chart.data.datasets.forEach((dataset, index) => {
-		const metric = Object.keys(sensorMetrics).find(key => sensorMetrics[key].label === dataset.label);
-		if (metric) {
-			chart.setDatasetVisibility(index, sensorMetrics[metric].visible);
-		}
-	});
+		setChart(newChart);
+	}
 
-	chart.update();
-}
-
-function createDataset(label, data, color, hidden = false) {
-	return {
-		label: label,
-		data: data,
-		borderColor: color,
-		backgroundColor: 'transparent',
-		fill: false,
-		tension: 0.1,
-		hidden: hidden
-	};
-}
-
-function debounce(func, wait) {
-	let timeout;
-	return function executedFunction(...args) {
-		const later = () => {
-			clearTimeout(timeout);
-			func(...args);
+	function createDataset(label, data, color, hidden = false) {
+		return {
+			label: label,
+			data: data,
+			borderColor: color,
+			backgroundColor: 'transparent',
+			fill: false,
+			tension: 0.1,
+			hidden: hidden
 		};
-		clearTimeout(timeout);
-		timeout = setTimeout(later, wait);
-	};
+	}
+
+	function toggleChartSeries(metric) {
+		sensorMetrics[metric].visible = !sensorMetrics[metric].visible;
+		if (chart) {
+			const datasetIndex = chart.data.datasets.findIndex(dataset => dataset.label === sensorMetrics[metric].label);
+			if (datasetIndex > -1) {
+				chart.setDatasetVisibility(datasetIndex, sensorMetrics[metric].visible);
+				chart.update();
+			}
+		}
+	}
+
+	return (
+		<div className="container mx-auto px-4 py-8 h-screen flex flex-col">
+			<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+				{Object.keys(sensorMetrics).map(metric => (
+					<Gauge key={metric} metric={metric} value={data.length > 0 ? data[data.length - 1][metric].toFixed(1) : 'N/A'} />
+				))}
+			</div>
+
+			<div className="flex flex-col md:flex-row justify-between items-center mb-8">
+				<TimeRangeSelector timeRange={timeRange} onTimeRangeChange={setTimeRange} />
+				{timeRange === 'custom' && (
+					<CustomDateRange
+						startDate={startDate}
+						endDate={endDate}
+						onStartDateChange={setStartDate}
+						onEndDateChange={setEndDate}
+					/>
+				)}
+			</div>
+
+			<div id="chartContainer" className="bg-white p-4 rounded-lg shadow flex-grow">
+				<canvas ref={chartRef} id="airQualityChart"></canvas>
+			</div>
+		</div>
+	);
 }
+
+ReactDOM.render(<App />, document.getElementById('root'));

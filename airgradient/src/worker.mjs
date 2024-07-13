@@ -6,16 +6,14 @@ import clientHtml from './client.html';
 import openapiYaml from './openapi.yaml';
 import aiPluginJson from './ai-plugin.json';
 
-
 const app = new Hono();
 
 app.use(async (c, next) => {
 	try {
-		await next(); // Go to the next middleware
+		await next();
 	} catch (err) {
-		// Log the error
 		console.error(err);
-		throw err; // Keep throwing the error to let other middleware handle it
+		throw err;
 	}
 });
 
@@ -26,7 +24,6 @@ app.get('/.well-known/ai-plugin.json', async c => {
 app.get('/openapi.yaml', async c => {
 	return c.text(openapiYaml);
 });
-
 
 app.post('/sensors/:id/measures',
 	zValidator(
@@ -60,12 +57,11 @@ app.post('/sensors/:id/measures',
 
 app.get('/sensors/:id', async c => {
 	const { id } = c.req.param();
-	let start = parseInt(c.req.query('start')) || (Date.now() - 60 * 60 * 1000) / 1000; // Default to past 1 hour
-	let end = parseInt(c.req.query('end')) || (Date.now() / 1000); // Default to current time
+	let start = parseInt(c.req.query('start')) || (Date.now() - 60 * 60 * 1000) / 1000;
+	let end = parseInt(c.req.query('end')) || (Date.now() / 1000);
 
 	start = Math.round(start);
 	end = Math.round(end);
-
 
 	const query = `
 		SELECT double1 AS wifi,
@@ -96,11 +92,9 @@ app.get('/sensors/:id', async c => {
 		return new Response('An error occurred!', { status: 500 });
 	}
 
-	// Read the JSON data from the query response and render the data as HTML.
 	const queryJSON = await queryResponse.json();
 	return c.json(queryJSON.data);
 });
-
 
 app.get('/sensors/:id/chart', async c => {
 	const { id } = c.req.param();
@@ -108,13 +102,4 @@ app.get('/sensors/:id/chart', async c => {
 	return c.html(html);
 });
 
-app.use(async (c, next) => {
-	try {
-		await next(); // Go to the next middleware
-	} catch (err) {
-		// Log the error
-		console.error(err);
-		throw err; // Keep throwing the error to let other middleware handle it
-	}
-});
 export default app;
