@@ -531,9 +531,6 @@ function App() {
 
 	return (
 		<div className="h-screen flex flex-col overflow-hidden">
-			<header className="bg-gray-50 py-2 mb-4 text-center">
-				<h1 className="text-lg font-semibold text-gray-700">AirGradient Sensor Dashboard</h1>
-			</header>
 			{weatherPrediction && (
 				<div className="bg-gray-50 text-gray-700 p-2 mb-4 text-center" role="alert">
 					<p className="font-medium">
