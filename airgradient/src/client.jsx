@@ -171,14 +171,14 @@ function CustomDateRange({ startDate, endDate, onStartDateChange, onEndDateChang
 		<div className="w-full md:w-auto">
 			<input
 				type="datetime-local"
-				value={startDate}
-				onChange={(e) => onStartDateChange(e.target.value)}
+				value={startDate ? new Date(startDate).toISOString().slice(0, 16) : ''}
+				onChange={(e) => onStartDateChange(new Date(e.target.value).toLocaleString())}
 				className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mb-2 md:mb-0 md:mr-2"
 			/>
 			<input
 				type="datetime-local"
-				value={endDate}
-				onChange={(e) => onEndDateChange(e.target.value)}
+				value={endDate ? new Date(endDate).toISOString().slice(0, 16) : ''}
+				onChange={(e) => onEndDateChange(new Date(e.target.value).toLocaleString())}
 				className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
 			/>
 		</div>
@@ -203,7 +203,7 @@ function App() {
 		if (data.length > 0 && svgRef.current) {
 			updateChart();
 		}
-	}, [data, visibleMetrics]);
+	}, [data, visibleMetrics, timeRange]);
 
 	React.useEffect(() => {
 		function handleResize() {
@@ -213,7 +213,7 @@ function App() {
 		}
 		window.addEventListener('resize', handleResize);
 		return () => window.removeEventListener('resize', handleResize);
-	}, [data, visibleMetrics]);
+	}, [data, visibleMetrics, timeRange]);
 
 	React.useEffect(() => {
 		const fetchDataAndVersion = async () => {
@@ -315,9 +315,22 @@ function App() {
 			.domain(d3.extent(data, d => d.ts))
 			.range([0, width]);
 
+		const xAxis = d3.axisBottom(x)
+			.tickFormat(d => d.toLocaleString(undefined, { 
+				month: 'short', 
+				day: 'numeric', 
+				hour: 'numeric', 
+				minute: 'numeric' 
+			}));
+
 		svg.append("g")
 			.attr("transform", `translate(0,${height})`)
-			.call(d3.axisBottom(x));
+			.call(xAxis)
+			.selectAll("text")
+			.style("text-anchor", "end")
+			.attr("dx", "-.8em")
+			.attr("dy", ".15em")
+			.attr("transform", "rotate(-45)");
 
 		svg.append("g")
 			.call(d3.axisLeft(y));
@@ -348,8 +361,8 @@ function App() {
 			if (!event.selection) return;
 			const [x0, x1] = event.selection.map(x.invert);
 			setTimeRange('custom');
-			setStartDate(x0.toISOString().slice(0, 16));
-			setEndDate(x1.toISOString().slice(0, 16));
+			setStartDate(x0.toLocaleString(undefined, {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}));
+			setEndDate(x1.toLocaleString(undefined, {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}));
 			fetchDataAndUpdateChart();
 			svg.select(".brush").call(brush.move, null);
 		}
