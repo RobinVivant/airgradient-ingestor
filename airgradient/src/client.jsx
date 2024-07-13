@@ -407,7 +407,8 @@ function App() {
 			.style("border", "solid")
 			.style("border-width", "1px")
 			.style("border-radius", "5px")
-			.style("padding", "10px");
+			.style("padding", "10px")
+			.style("pointer-events", "none");
 
 		// Create a rect to capture mouse events
 		svg.append("rect")
@@ -415,16 +416,17 @@ function App() {
 			.attr("height", height)
 			.style("fill", "none")
 			.style("pointer-events", "all")
-			.on("mouseover", () => {
+			.on("mouseover touchstart", () => {
 				verticalLine.attr("opacity", 1);
 				tooltip.style("opacity", 1);
 			})
-			.on("mouseout", () => {
+			.on("mouseout touchend", () => {
 				verticalLine.attr("opacity", 0);
 				tooltip.style("opacity", 0);
 			})
-			.on("mousemove", (event) => {
-				const [xPos] = d3.pointer(event);
+			.on("mousemove touchmove", (event) => {
+				event.preventDefault();
+				const [xPos] = d3.pointer(event.type.startsWith('touch') ? event.touches[0] : event, this);
 				verticalLine.attr("x1", xPos).attr("x2", xPos);
 
 				const x0 = x.invert(xPos);
@@ -434,18 +436,18 @@ function App() {
 				const d1 = data[i];
 				const d = x0 - d0.ts > d1.ts - x0 ? d1 : d0;
 
-				tooltip.html(`Time: ${d.ts.toLocaleString(undefined, { 
+				tooltip.html(`<strong>${d.ts.toLocaleString(undefined, { 
 					month: 'short', 
 					day: 'numeric', 
 					hour: 'numeric', 
 					minute: 'numeric' 
-				})}<br>${
+				})}</strong><br>${
 					visibleMetricKeys.map(metric => 
-						`${sensorMetrics[metric].label}: ${d[metric].toFixed(1)}${sensorMetrics[metric].unit}`
+						`<span style="color:${sensorMetrics[metric].gaugeColor}">${d[metric].toFixed(1)}${sensorMetrics[metric].unit}</span>`
 					).join('<br>')
 				}`)
-				.style("left", (event.pageX + 15) + "px")
-				.style("top", (event.pageY - 28) + "px");
+				.style("left", (event.type.startsWith('touch') ? event.touches[0].pageX : event.pageX) + 15 + "px")
+				.style("top", (event.type.startsWith('touch') ? event.touches[0].pageY : event.pageY) - 28 + "px");
 			});
 	}
 
@@ -482,7 +484,7 @@ function App() {
 				/>
 			</div>
 
-			<div id="chartContainer" ref={chartContainerRef} className="bg-white p-4 rounded-lg shadow flex-grow" style={{ height: 'calc(100vh - 300px)' }}>
+			<div id="chartContainer" ref={chartContainerRef} className="bg-white p-4 rounded-lg shadow flex-grow" style={{ height: 'calc(max(400px, 100vh - 300px))' }}>
 				<svg ref={svgRef}></svg>
 			</div>
 		</div>
