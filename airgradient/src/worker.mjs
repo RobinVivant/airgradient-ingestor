@@ -89,17 +89,15 @@ app.get('/sensors/:id', async c => {
 	`;
 
 	const API = `https://api.cloudflare.com/client/v4/accounts/${c.env.ACCOUNT_ID}/analytics_engine/sql`;
-	const requestBody = JSON.stringify({
-		params: [start, end],
-		sql: query
-	});
+	const requestBody = `${query.replace(/\?/g, '%s')}`;
 	console.log('SQL Query:', query);
 	console.log('Query Parameters:', [start, end]);
 	console.log('Request Body:', requestBody);
 	const queryResponse = await fetch(API, {
 		method: 'POST',
 		headers: {
-			'Authorization': `Bearer ${c.env.API_TOKEN}`
+			'Authorization': `Bearer ${c.env.API_TOKEN}`,
+			'Content-Type': 'application/sql'
 		},
 		body: requestBody
 	});
