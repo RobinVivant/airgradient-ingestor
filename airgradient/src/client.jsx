@@ -248,7 +248,7 @@ function TimeRangeSelector({ timeRange, onTimeRangeChange }) {
 
 	return (
 		<div className="w-full">
-			<div className="flex flex-wrap gap-2">
+			<div className="flex flex-wrap justify-center gap-2">
 				{timeRanges.map(({ value, label }) => (
 					<button
 						key={value}
