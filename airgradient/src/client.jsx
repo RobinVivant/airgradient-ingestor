@@ -332,7 +332,7 @@ function App() {
 	function updateChart() {
 		if (!svgRef.current || data.length === 0 || chartDimensions.width === 0 || chartDimensions.height === 0) return;
 
-		const margin = { top: 20, right: 20, bottom: 50, left: 60 };
+		const margin = { top: 20, right: 20, bottom: 70, left: 60 };
 		const width = chartDimensions.width - margin.left - margin.right;
 		const height = chartDimensions.height - margin.top - margin.bottom;
 
@@ -359,12 +359,11 @@ function App() {
 			.range([height, 0]);
 
 		const xAxis = d3.axisBottom(x)
-			.tickFormat(d => d.toLocaleString(undefined, { 
-				month: 'short', 
-				day: 'numeric', 
-				hour: 'numeric', 
-				minute: 'numeric' 
-			}));
+			.ticks(5)
+			.tickFormat(d => {
+				const format = d3.timeFormat("%b %d %H:%M");
+				return format(d);
+			});
 
 		svg.append("g")
 			.attr("transform", `translate(0,${height})`)
@@ -373,7 +372,7 @@ function App() {
 			.style("text-anchor", "end")
 			.attr("dx", "-.8em")
 			.attr("dy", ".15em")
-			.attr("transform", "rotate(-45)");
+			.attr("transform", "rotate(-25)");
 
 		svg.append("g")
 			.call(d3.axisLeft(y));
