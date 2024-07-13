@@ -218,7 +218,7 @@ function App() {
 
 		const margin = { top: 20, right: 20, bottom: 30, left: 50 };
 		const width = svgRef.current.clientWidth - margin.left - margin.right;
-		let height = svgRef.current.clientHeight - margin.top - margin.bottom;
+		const height = svgRef.current.clientHeight - margin.top - margin.bottom;
 
 		d3.select(svgRef.current).selectAll("*").remove();
 
@@ -228,18 +228,14 @@ function App() {
 			.domain([
 				d3.min(data, d => Math.min(...visibleMetricKeys.map(metric => d[metric]))),
 				d3.max(data, d => Math.max(...visibleMetricKeys.map(metric => d[metric])))
-			]);
-
-		// Adjust height based on the number of visible metrics
-		const minHeight = 200; // Minimum height for the chart
-		const heightPerMetric = 100; // Additional height per metric
-		height = Math.max(minHeight, visibleMetricKeys.length * heightPerMetric);
-		y.range([height, 0]);
+			])
+			.range([height, 0]);
 
 		const svg = d3.select(svgRef.current)
 			.append("svg")
-			.attr("width", width + margin.left + margin.right)
-			.attr("height", height + margin.top + margin.bottom)
+			.attr("width", "100%")
+			.attr("height", "100%")
+			.attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
 			.append("g")
 			.attr("transform", `translate(${margin.left},${margin.top})`);
 
