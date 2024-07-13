@@ -161,12 +161,11 @@ function App() {
 	const [timeRange, setTimeRange] = React.useState('1h');
 	const [startDate, setStartDate] = React.useState('');
 	const [endDate, setEndDate] = React.useState('');
-	const [chart, setChart] = React.useState(null);
 	const [visibleMetrics, setVisibleMetrics] = React.useState(
 		Object.fromEntries(Object.entries(sensorMetrics).map(([key, value]) => [key, value.visible]))
 	);
 
-	const chartRef = React.useRef(null);
+	const svgRef = React.useRef(null);
 
 	React.useEffect(() => {
 		fetchDataAndUpdateChart();
