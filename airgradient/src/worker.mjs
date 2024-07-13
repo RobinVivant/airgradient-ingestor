@@ -3,16 +3,14 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import clientJs from './client.jsx';
 import clientHtml from './client.html';
-import { randomBytes } from 'crypto';
-
 const app = new Hono();
 
-// Generate a random version string
-const randomVersion = randomBytes(8).toString('hex');
+// Generate a version string based on timestamp
+const generateVersion = () => Date.now().toString(36);
 
 // Add a version endpoint
 app.get('/version', (c) => {
-	return c.json({ version: randomVersion });
+	return c.json({ version: generateVersion() });
 });
 
 app.use(async (c, next) => {
