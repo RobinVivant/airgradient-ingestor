@@ -150,41 +150,48 @@ function RotatingNumber({ value }) {
 	return <span style={style}>{displayValue}</span>;
 }
 
-function TimeRangeSelector({ timeRange, onTimeRangeChange }) {
+function TimeRangeSelector({ timeRange, onTimeRangeChange, startDate, endDate, onStartDateChange, onEndDateChange }) {
 	return (
-		<div className="w-full md:w-auto mb-4 md:mb-0">
-			<label htmlFor="timeRange" className="block text-sm font-medium text-gray-700 mb-1">Time Range:</label>
-			<select
-				id="timeRange"
-				value={timeRange}
-				onChange={(e) => onTimeRangeChange(e.target.value)}
-				className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-			>
-				<option value="1h">Last Hour</option>
-				<option value="24h">Last 24 Hours</option>
-				<option value="7d">Last 7 Days</option>
-				<option value="30d">Last 30 Days</option>
-				<option value="custom">Custom Range</option>
-			</select>
-		</div>
-	);
-}
-
-function CustomDateRange({ startDate, endDate, onStartDateChange, onEndDateChange }) {
-	return (
-		<div className="w-full md:w-auto">
-			<input
-				type="datetime-local"
-				value={startDate ? new Date(startDate).toISOString().slice(0, 16) : ''}
-				onChange={(e) => onStartDateChange(new Date(e.target.value).toLocaleString())}
-				className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mb-2 md:mb-0 md:mr-2"
-			/>
-			<input
-				type="datetime-local"
-				value={endDate ? new Date(endDate).toISOString().slice(0, 16) : ''}
-				onChange={(e) => onEndDateChange(new Date(e.target.value).toLocaleString())}
-				className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-			/>
+		<div className="w-full flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+			<div className="w-full md:w-auto">
+				<label htmlFor="timeRange" className="block text-sm font-medium text-gray-700 mb-1">Time Range:</label>
+				<select
+					id="timeRange"
+					value={timeRange}
+					onChange={(e) => onTimeRangeChange(e.target.value)}
+					className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+				>
+					<option value="1h">Last Hour</option>
+					<option value="24h">Last 24 Hours</option>
+					<option value="7d">Last 7 Days</option>
+					<option value="30d">Last 30 Days</option>
+					<option value="custom">Custom Range</option>
+				</select>
+			</div>
+			{timeRange === 'custom' && (
+				<>
+					<div className="w-full md:w-auto">
+						<label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">Start Date:</label>
+						<input
+							id="startDate"
+							type="datetime-local"
+							value={startDate ? new Date(startDate).toISOString().slice(0, 16) : ''}
+							onChange={(e) => onStartDateChange(new Date(e.target.value).toLocaleString())}
+							className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+						/>
+					</div>
+					<div className="w-full md:w-auto">
+						<label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">End Date:</label>
+						<input
+							id="endDate"
+							type="datetime-local"
+							value={endDate ? new Date(endDate).toISOString().slice(0, 16) : ''}
+							onChange={(e) => onEndDateChange(new Date(e.target.value).toLocaleString())}
+							className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+						/>
+					</div>
+				</>
+			)}
 		</div>
 	);
 }
@@ -201,8 +208,6 @@ function App() {
 
 	const svgRef = React.useRef(null);
 	const [currentVersion, setCurrentVersion] = React.useState(null);
-	const [brushExtent, setBrushExtent] = React.useState(null);
-
 	React.useEffect(() => {
 		const fetchDataAndVersion = async () => {
 			await fetchDataAndUpdateChart();
@@ -221,12 +226,6 @@ function App() {
 		}
 	}, [data, visibleMetrics]);
 
-	React.useEffect(() => {
-		if (brushExtent) {
-			fetchDataAndUpdateChart();
-		}
-	}, [brushExtent]);
-
 	async function fetchVersion() {
 		try {
 			const response = await fetch('/version');
@@ -244,9 +243,7 @@ function App() {
 	async function fetchDataAndUpdateChart() {
 		let start, end;
 
-		if (brushExtent) {
-			[start, end] = brushExtent;
-		} else if (timeRange === 'custom' && startDate && endDate) {
+		if (timeRange === 'custom' && startDate && endDate) {
 			start = new Date(startDate);
 			end = new Date(endDate);
 		} else {
@@ -286,14 +283,8 @@ function App() {
 				setTimeout(() => setAnimatingMetrics({}), 1000);
 				return processedData;
 			});
-
-			// Update the brush extent after successful data fetch
-			if (brushExtent) {
-				setBrushExtent([new Date(start), new Date(end)]);
-			}
 		} catch (error) {
 			console.error('Error fetching or processing data:', error);
-			setBrushExtent(null); // Reset brush extent on error
 			setTimeRange('1h'); // Reset time range to default
 		}
 	}
@@ -317,7 +308,7 @@ function App() {
 		const visibleMetricKeys = Object.keys(sensorMetrics).filter(metric => visibleMetrics[metric]);
 
 		const x = d3.scaleTime()
-			.domain(brushExtent || d3.extent(data, d => d.ts))
+			.domain(d3.extent(data, d => d.ts))
 			.range([0, width]);
 
 		const y = d3.scaleLinear()
@@ -348,62 +339,18 @@ function App() {
 		svg.append("g")
 			.call(d3.axisLeft(y));
 
-		const clip = svg.append("defs").append("svg:clipPath")
-			.attr("id", "clip")
-			.append("svg:rect")
-			.attr("width", width)
-			.attr("height", height)
-			.attr("x", 0)
-			.attr("y", 0);
-
-		const chartGroup = svg.append("g")
-			.attr("clip-path", "url(#clip)");
-
 		visibleMetricKeys.forEach(metric => {
 			const line = d3.line()
 				.x(d => x(d.ts))
 				.y(d => y(d[metric]));
 
-			chartGroup.append("path")
+			svg.append("path")
 				.datum(data)
 				.attr("fill", "none")
 				.attr("stroke", sensorMetrics[metric].gaugeColor)
 				.attr("stroke-width", 1.5)
 				.attr("d", line);
 		});
-
-		const brush = d3.brushX()
-			.extent([[0, 0], [width, height]])
-			.on("end", brushended);
-
-		svg.append("g")
-			.attr("class", "brush")
-			.call(brush);
-
-		function brushended(event) {
-			if (!event.selection) {
-				if (!brushExtent) return;
-				setBrushExtent(null);
-				setTimeRange('1h');
-				return;
-			}
-			const [x0, x1] = event.selection.map(x.invert);
-			
-			// Only update if the brush extent has changed significantly
-			if (!brushExtent || 
-				Math.abs(x0 - brushExtent[0]) > 1000 || 
-				Math.abs(x1 - brushExtent[1]) > 1000) {
-				setBrushExtent([x0, x1]);
-				setTimeRange('custom');
-				setStartDate(x0.toLocaleString());
-				setEndDate(x1.toLocaleString());
-			}
-		}
-
-		// If there's an active brush extent, update the brush
-		if (brushExtent) {
-			svg.select(".brush").call(brush.move, brushExtent.map(x));
-		}
 	}
 
 	function toggleChartSeries(metric) {
@@ -428,16 +375,15 @@ function App() {
 				))}
 			</div>
 
-			<div className="flex flex-col md:flex-row justify-between items-center mb-8">
-				<TimeRangeSelector timeRange={timeRange} onTimeRangeChange={setTimeRange} />
-				{timeRange === 'custom' && (
-					<CustomDateRange
-						startDate={startDate}
-						endDate={endDate}
-						onStartDateChange={setStartDate}
-						onEndDateChange={setEndDate}
-					/>
-				)}
+			<div className="mb-8">
+				<TimeRangeSelector 
+					timeRange={timeRange} 
+					onTimeRangeChange={setTimeRange}
+					startDate={startDate}
+					endDate={endDate}
+					onStartDateChange={setStartDate}
+					onEndDateChange={setEndDate}
+				/>
 			</div>
 
 			<div id="chartContainer" className="bg-white p-4 rounded-lg shadow flex-grow" style={{ height: 'calc(100vh - 300px)' }}>
