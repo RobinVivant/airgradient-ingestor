@@ -244,6 +244,9 @@ function App() {
 
 		try {
 			const response = await fetch(`/sensors/${sensorId}?start=${Math.round(start / 1000)}&end=${Math.round(end / 1000)}`);
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
 			const rawData = await response.json();
 
 			const reducedData = reduceDataPoints(rawData, 100);
@@ -254,20 +257,21 @@ function App() {
 			}));
 
 			setData(prevData => {
-				if (prevData.length > 0) {
-					const newAnimatingMetrics = {};
+				const newAnimatingMetrics = {};
+				if (prevData.length > 0 && processedData.length > 0) {
 					Object.keys(sensorMetrics).forEach(metric => {
 						if (processedData[processedData.length - 1][metric] !== prevData[prevData.length - 1][metric]) {
 							newAnimatingMetrics[metric] = true;
 						}
 					});
-					setAnimatingMetrics(newAnimatingMetrics);
-					setTimeout(() => setAnimatingMetrics({}), 1000);
 				}
+				setAnimatingMetrics(newAnimatingMetrics);
+				setTimeout(() => setAnimatingMetrics({}), 1000);
 				return processedData;
 			});
 		} catch (error) {
 			console.error('Error fetching or processing data:', error);
+			// You might want to set an error state here and display it to the user
 		}
 	}
 

@@ -47,17 +47,21 @@ app.post('/sensors/:id/measures',
 	async c => {
 		const { id } = c.req.param();
 		const body = c.req.valid('json');
-		console.log(id, body);
 
 		const { wifi, rco2, pm02, tvoc_index, nox_index, atmp, rhum, pressure } = body;
 
-		c.env.MEASURES.writeDataPoint({
-			'doubles': [wifi, rco2, pm02, tvoc_index, nox_index, atmp, rhum, pressure],
-			'indexes': [id.split(':')[1]]
-		});
+		try {
+			await c.env.MEASURES.writeDataPoint({
+				'doubles': [wifi, rco2, pm02, tvoc_index, nox_index, atmp, rhum, pressure],
+				'indexes': [id.split(':')[1]]
+			});
 
-		c.status(201);
-		return c.text('Created');
+			c.status(201);
+			return c.json({ message: 'Data point created successfully' });
+		} catch (error) {
+			console.error('Error writing data point:', error);
+			return c.json({ error: 'Failed to write data point' }, 500);
+		}
 	});
 
 app.get('/sensors/:id', async c => {
@@ -78,8 +82,8 @@ app.get('/sensors/:id', async c => {
 					 double7 AS rhum,
 					 double8 AS pressure, timestamp AS ts
 		FROM MEASURES
-		WHERE timestamp >= toDateTime(${start})
-			AND timestamp <= toDateTime(${end})
+		WHERE timestamp >= toDateTime(?)
+			AND timestamp <= toDateTime(?)
 		ORDER BY ts ASC
 	`;
 
@@ -89,12 +93,15 @@ app.get('/sensors/:id', async c => {
 		headers: {
 			'Authorization': `Bearer ${c.env.API_TOKEN}`
 		},
-		body: query
+		body: JSON.stringify({
+			params: [start, end],
+			sql: query
+		})
 	});
 
 	if (queryResponse.status !== 200) {
 		console.error('Error querying:', await queryResponse.text());
-		return new Response('An error occurred!', { status: 500 });
+		return c.json({ error: 'An error occurred while fetching data' }, 500);
 	}
 
 	const queryJSON = await queryResponse.json();
