@@ -6,7 +6,7 @@ no_bundle = true
 
 [vars]
 ACCOUNT_ID = "cd9e33fd195d65e911ed2dc87f1cf4c6"
-APP_VERSION = "${APP_VERSION:-unknown}"
+APP_VERSION = "1.0.0"
 
 [[analytics_engine_datasets]]
 binding = "MEASURES"
