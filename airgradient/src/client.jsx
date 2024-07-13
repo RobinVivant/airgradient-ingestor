@@ -203,7 +203,7 @@ function App() {
 		if (data.length > 0) {
 			updateChart();
 		}
-	}, [data, visibleMetrics]);
+	}, [data, visibleMetrics, svgRef.current?.clientWidth, svgRef.current?.clientHeight]);
 
 	React.useEffect(() => {
 		const fetchDataAndVersion = async () => {
@@ -317,23 +317,32 @@ function App() {
 				.x(d => x(d.ts))
 				.y(d => y(d[metric]));
 
-			const path = svg.append("path")
+			svg.append("path")
 				.datum(data)
 				.attr("fill", "none")
 				.attr("stroke", sensorMetrics[metric].gaugeColor)
 				.attr("stroke-width", 1.5)
 				.attr("d", line);
-
-			// Animate the path
-			const totalLength = path.node().getTotalLength();
-			path
-				.attr("stroke-dasharray", totalLength + " " + totalLength)
-				.attr("stroke-dashoffset", totalLength)
-				.transition()
-				.duration(1000)
-				.ease(d3.easeLinear)
-				.attr("stroke-dashoffset", 0);
 		});
+
+		// Add brush functionality
+		const brush = d3.brushX()
+			.extent([[0, 0], [width, height]])
+			.on("end", brushended);
+
+		svg.append("g")
+			.attr("class", "brush")
+			.call(brush);
+
+		function brushended(event) {
+			if (!event.selection) return;
+			const [x0, x1] = event.selection.map(x.invert);
+			setTimeRange('custom');
+			setStartDate(x0.toISOString().slice(0, 16));
+			setEndDate(x1.toISOString().slice(0, 16));
+			fetchDataAndUpdateChart();
+			svg.select(".brush").call(brush.move, null);
+		}
 	}
 
 	function toggleChartSeries(metric) {
@@ -370,7 +379,7 @@ function App() {
 				)}
 			</div>
 
-			<div id="chartContainer" className="bg-white p-4 rounded-lg shadow flex-grow">
+			<div id="chartContainer" className="bg-white p-4 rounded-lg shadow flex-grow" style={{ height: 'calc(100vh - 300px)' }}>
 				<svg ref={svgRef} width="100%" height="100%"></svg>
 			</div>
 		</div>
