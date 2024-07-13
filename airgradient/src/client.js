@@ -1,3 +1,4 @@
+/** @jsx React.createElement */
 const sensorId = '{{__sensorId__}}';
 
 const sensorMetrics = {

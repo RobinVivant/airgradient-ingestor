@@ -23,7 +23,8 @@ export default {
 		babel({
 			babelHelpers: 'bundled',
 			presets: ['@babel/preset-react'],
-			extensions: ['.js', '.jsx']
+			extensions: ['.js', '.jsx'],
+			exclude: 'node_modules/**'
 		}),
 		terser({
 			sourceMap: true,
