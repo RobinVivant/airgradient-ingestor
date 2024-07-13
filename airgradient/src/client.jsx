@@ -121,12 +121,12 @@ function Gauge({ metric, value, visible, onToggle, isAnimating }) {
 		: 'N/A';
 
 	return (
-		<div className="bg-white p-4 rounded-lg shadow" style={style} onClick={() => onToggle(metric)}>
-			<div className="text-lg font-semibold" style={{ color: gaugeColor }}>
+		<div className="bg-white p-2 sm:p-4 rounded-lg shadow" style={style} onClick={() => onToggle(metric)}>
+			<div className="text-sm sm:text-lg font-semibold" style={{ color: gaugeColor }}>
 				<RotatingNumber value={displayValue} />
 				{value !== 'N/A' && unit}
 			</div>
-			<div className="text-sm text-gray-500">{label}</div>
+			<div className="text-xs sm:text-sm text-gray-500">{label}</div>
 		</div>
 	);
 }
@@ -462,8 +462,8 @@ function App() {
 	}
 
 	return (
-		<div className="container mx-auto px-4 py-8 h-screen flex flex-col">
-			<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+		<div className="container mx-auto px-4 py-4 sm:py-8 h-screen flex flex-col">
+			<div className="grid grid-cols-4 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
 				{Object.keys(sensorMetrics).map(metric => (
 					<Gauge 
 						key={metric} 
