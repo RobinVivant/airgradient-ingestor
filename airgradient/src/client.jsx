@@ -388,6 +388,65 @@ function App() {
 				.attr("stroke-width", 1.5)
 				.attr("d", line);
 		});
+
+		// Add a vertical line
+		const verticalLine = svg.append("line")
+			.attr("opacity", 0)
+			.attr("y1", 0)
+			.attr("y2", height)
+			.attr("stroke", "black")
+			.attr("stroke-width", 1)
+			.attr("pointer-events", "none");
+
+		// Add a tooltip
+		const tooltip = d3.select("body").append("div")
+			.attr("class", "tooltip")
+			.style("opacity", 0)
+			.style("position", "absolute")
+			.style("background-color", "white")
+			.style("border", "solid")
+			.style("border-width", "1px")
+			.style("border-radius", "5px")
+			.style("padding", "10px");
+
+		// Create a rect to capture mouse events
+		svg.append("rect")
+			.attr("width", width)
+			.attr("height", height)
+			.style("fill", "none")
+			.style("pointer-events", "all")
+			.on("mouseover", () => {
+				verticalLine.attr("opacity", 1);
+				tooltip.style("opacity", 1);
+			})
+			.on("mouseout", () => {
+				verticalLine.attr("opacity", 0);
+				tooltip.style("opacity", 0);
+			})
+			.on("mousemove", (event) => {
+				const [xPos] = d3.pointer(event);
+				verticalLine.attr("x1", xPos).attr("x2", xPos);
+
+				const x0 = x.invert(xPos);
+				const bisectDate = d3.bisector(d => d.ts).left;
+				const i = bisectDate(data, x0, 1);
+				const d0 = data[i - 1];
+				const d1 = data[i];
+				const d = x0 - d0.ts > d1.ts - x0 ? d1 : d0;
+
+				tooltip.html(`Time: ${d.ts.toLocaleString(undefined, { 
+					month: 'short', 
+					day: 'numeric', 
+					hour: 'numeric', 
+					minute: 'numeric' 
+				})}<br>${
+					visibleMetricKeys.map(metric => 
+						`${sensorMetrics[metric].label}: ${d[metric].toFixed(1)}${sensorMetrics[metric].unit}`
+					).join('<br>')
+				}`)
+				.style("left", (event.pageX + 15) + "px")
+				.style("top", (event.pageY - 28) + "px");
+			});
 	}
 
 	function toggleChartSeries(metric) {
