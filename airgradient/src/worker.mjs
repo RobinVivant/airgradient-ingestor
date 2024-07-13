@@ -3,15 +3,13 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import clientJs from './client.jsx';
 import clientHtml from './client.html';
-import openapiYaml from './openapi.yaml';
-import aiPluginJson from './ai-plugin.json';
 
 const app = new Hono();
 
 
 // Add a version endpoint
 app.get('/version', (c) => {
-  return c.json({ version: c.env.CF_PAGES_COMMIT_SHA || 'development' });
+	return c.json({ version: c.env.CF_PAGES_COMMIT_SHA || 'development' });
 });
 
 app.use(async (c, next) => {
@@ -21,14 +19,6 @@ app.use(async (c, next) => {
 		console.error(err);
 		throw err;
 	}
-});
-
-app.get('/.well-known/ai-plugin.json', async c => {
-	return c.json(JSON.parse(aiPluginJson));
-});
-
-app.get('/openapi.yaml', async c => {
-	return c.text(openapiYaml);
 });
 
 app.post('/sensors/:id/measures',
