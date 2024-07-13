@@ -506,7 +506,7 @@ function App() {
 				))}
 			</div>
 
-			<div className="mb-8">
+			<div className="mb-4 sm:mb-8">
 				<TimeRangeSelector
 					timeRange={timeRange}
 					onTimeRangeChange={setTimeRange}
