@@ -84,7 +84,7 @@ app.get('/sensors/:id', async c => {
 	} else if (interval === '5 minute') {
 		intervalFunction = 'toDateTime(intDiv(toUInt32(timestamp), 300) * 300)';
 	} else { // 1 minute
-		intervalFunction = 'toStartOfMinute(timestamp)';
+		intervalFunction = 'toDateTime(intDiv(toUInt32(timestamp), 60) * 60)';
 	}
 
 	const query = `
