@@ -174,20 +174,22 @@ function TimeRangeSelector({ timeRange, onTimeRangeChange, startDate, endDate, o
 
 	return (
 		<div className="w-full space-y-4">
-			<div className="flex flex-wrap gap-2">
-				{timeRanges.map(({ value, label }) => (
-					<button
-						key={value}
-						onClick={() => onTimeRangeChange(value)}
-						className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 ${
-							timeRange === value
-								? 'bg-indigo-600 text-white'
-								: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-						}`}
-					>
-						{label}
-					</button>
-				))}
+			<div className="overflow-x-auto whitespace-nowrap pb-2">
+				<div className="inline-flex gap-2">
+					{timeRanges.map(({ value, label }) => (
+						<button
+							key={value}
+							onClick={() => onTimeRangeChange(value)}
+							className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 ${
+								timeRange === value
+									? 'bg-indigo-600 text-white'
+									: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+							}`}
+						>
+							{label}
+						</button>
+					))}
+				</div>
 			</div>
 			{timeRange === 'custom' && (
 				<div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
@@ -408,7 +410,8 @@ function App() {
 			.style("border-width", "1px")
 			.style("border-radius", "5px")
 			.style("padding", "10px")
-			.style("pointer-events", "none");
+			.style("pointer-events", "none")
+			.style("transform", "translate(-50%, -100%)");
 
 		// Create a rect to capture mouse events
 		svg.append("rect")
@@ -446,8 +449,8 @@ function App() {
 						`<span style="color:${sensorMetrics[metric].gaugeColor}">${d[metric].toFixed(1)}${sensorMetrics[metric].unit}</span>`
 					).join('<br>')
 				}`)
-				.style("left", (event.type.startsWith('touch') ? event.touches[0].pageX : event.pageX) + 15 + "px")
-				.style("top", (event.type.startsWith('touch') ? event.touches[0].pageY : event.pageY) - 28 + "px");
+				.style("left", (event.type.startsWith('touch') ? event.touches[0].pageX : event.pageX) + "px")
+				.style("top", (event.type.startsWith('touch') ? event.touches[0].pageY : event.pageY) - 10 + "px");
 			});
 	}
 
@@ -484,7 +487,7 @@ function App() {
 				/>
 			</div>
 
-			<div id="chartContainer" ref={chartContainerRef} className="bg-white p-4 rounded-lg shadow flex-grow" style={{ height: 'calc(max(400px, 100vh - 300px))' }}>
+			<div id="chartContainer" ref={chartContainerRef} className="bg-white p-4 rounded-lg shadow flex-grow" style={{ height: 'calc(max(500px, 100vh - 300px))' }}>
 				<svg ref={svgRef}></svg>
 			</div>
 		</div>
