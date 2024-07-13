@@ -101,7 +101,7 @@ function smoothData(data, windowSize) {
     const start = Math.max(0, index - halfWindow);
     const end = Math.min(array.length, index + halfWindow + 1);
     const window = array.slice(start, end);
-    
+
     const smoothed = {};
     Object.keys(point).forEach(key => {
       if (typeof point[key] === 'number') {
@@ -243,7 +243,7 @@ function TimeRangeSelector({ timeRange, onTimeRangeChange }) {
 		{ value: '7d', label: '7d' },
 		{ value: '14d', label: '14d' },
 		{ value: '30d', label: '30d' },
-		{ value: '1y', label: '1y' }
+		{ value: '1y', label: 'max' }
 	];
 
 	return (
@@ -551,7 +551,7 @@ function App() {
 					</button>
 				</div>
 			)}
-			<div className="grid grid-cols-4 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8 mx-6">
+			<div className="grid grid-cols-4 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
 				{Object.keys(sensorMetrics).map(metric => (
 					<Gauge
 						key={metric}
