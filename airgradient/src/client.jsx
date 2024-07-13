@@ -517,7 +517,7 @@ function App() {
 				/>
 			</div>
 
-			<div id="chartContainer" ref={chartContainerRef} className="bg-white p-4 rounded-lg shadow flex-grow"
+			<div id="chartContainer" ref={chartContainerRef} className="bg-white pt-0 px-4 pb-4 rounded-lg shadow flex-grow"
 					 style={{ height: 'calc(max(500px, 100vh - 300px))' }}>
 				<svg ref={svgRef}></svg>
 			</div>
