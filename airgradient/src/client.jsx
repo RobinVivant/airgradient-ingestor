@@ -451,18 +451,22 @@ function App() {
 				const i = bisectDate(data, x0, 1);
 				const d0 = data[i - 1];
 				const d1 = data[i];
-				const d = x0 - d0.ts > d1.ts - x0 ? d1 : d0;
+				const d = d1 && x0 - d0.ts > d1.ts - x0 ? d1 : d0;
 
-				tooltip.html(`<strong>${new Date(d.ts.getTime() - d.ts.getTimezoneOffset() * 60000).toLocaleString(undefined, {
-					month: 'short',
-					day: 'numeric',
-					hour: 'numeric',
-					minute: 'numeric'
-				})}</strong><br>${
-					visibleMetricKeys.map(metric =>
-						`<span style="color:${sensorMetrics[metric].gaugeColor}">${d[metric].toFixed(1)}${sensorMetrics[metric].unit}</span>`
-					).join('<br>')
-				}`)
+				if (d && d.ts) {
+					tooltip.html(`<strong>${new Date(d.ts.getTime() - d.ts.getTimezoneOffset() * 60000).toLocaleString(undefined, {
+						month: 'short',
+						day: 'numeric',
+						hour: 'numeric',
+						minute: 'numeric'
+					})}</strong><br>${
+						visibleMetricKeys.map(metric =>
+							`<span style="color:${sensorMetrics[metric].gaugeColor}">${d[metric] !== undefined ? d[metric].toFixed(1) : 'N/A'}${sensorMetrics[metric].unit}</span>`
+						).join('<br>')
+					}`)
+				} else {
+					tooltip.html('No data available');
+				}
 					.style('left', (event.type.startsWith('touch') ? event.touches[0].pageX : event.pageX) + 'px')
 					.style('top', (event.type.startsWith('touch') ? event.touches[0].pageY : event.pageY) - 10 + 'px');
 			});
