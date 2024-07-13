@@ -132,6 +132,8 @@ function Gauge({ metric, value, visible, onToggle, isAnimating }) {
 	const displayValue = value !== 'N/A' ?
 		(metric === 'rco2' || metric === 'pm02' ?
 			Math.round(parseFloat(value))
+		: metric === 'atmp' || metric === 'feltTemp' || metric === 'rhum' ?
+			parseFloat(value) % 1 === 0 ? parseInt(value) : parseFloat(value).toFixed(1)
 		: metric === 'pressure' || metric === 'tvoc_index' || metric === 'nox_index' ?
 			parseFloat(value) % 1 === 0 ? parseInt(value) : parseFloat(value).toFixed(1)
 		: parseFloat(value).toFixed(1))
