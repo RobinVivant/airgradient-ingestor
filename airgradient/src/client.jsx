@@ -191,7 +191,7 @@ function TimeRangeSelector({ timeRange, onTimeRangeChange, startDate, endDate, o
 
 	return (
 		<div className="w-full space-y-4">
-			<div className="overflow-x-auto whitespace-nowrap pb-2">
+			<div className="overflow-x-auto whitespace-nowrap">
 				<div className="inline-flex gap-2">
 					{timeRanges.map(({ value, label }) => (
 						<button
@@ -349,7 +349,7 @@ function App() {
 	function updateChart() {
 		if (!svgRef.current || data.length === 0 || chartDimensions.width === 0 || chartDimensions.height === 0) return;
 
-		const margin = { top: 10, right: 0, bottom: 20, left: 20 };
+		const margin = { top: 20, right: 0, bottom: 20, left: 20 };
 		const width = chartDimensions.width - margin.left - margin.right;
 		const height = chartDimensions.height - margin.top - margin.bottom;
 
