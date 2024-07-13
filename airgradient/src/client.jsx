@@ -467,7 +467,7 @@ function App() {
 				} else {
 					tooltip.html('No data available');
 				}
-					.style('left', (event.type.startsWith('touch') ? event.touches[0].pageX : event.pageX) + 'px')
+				tooltip.style('left', (event.type.startsWith('touch') ? event.touches[0].pageX : event.pageX) + 'px')
 					.style('top', (event.type.startsWith('touch') ? event.touches[0].pageY : event.pageY) - 10 + 'px');
 			});
 	}
