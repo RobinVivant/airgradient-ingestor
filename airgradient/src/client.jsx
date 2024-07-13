@@ -261,6 +261,11 @@ function App() {
 			}
 			const rawData = await response.json();
 
+			if (!Array.isArray(rawData) || rawData.length === 0) {
+				console.warn('Received empty or invalid data');
+				return; // Exit the function early
+			}
+
 			const reducedData = reduceDataPoints(rawData, 100);
 			const processedData = reducedData.map(d => ({
 				...d,
@@ -283,7 +288,8 @@ function App() {
 			});
 		} catch (error) {
 			console.error('Error fetching or processing data:', error);
-			// You might want to set an error state here and display it to the user
+			setBrushExtent(null); // Reset brush extent on error
+			setTimeRange('1h'); // Reset time range to default
 		}
 	}
 
