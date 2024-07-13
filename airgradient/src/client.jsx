@@ -530,7 +530,7 @@ function App() {
 
 
 	return (
-		<div className="h-screen flex flex-col overflow-hidden">
+		<div className="min-h-screen flex flex-col overflow-y-auto px-4 pb-4">
 			{weatherPrediction && (
 				<div className="bg-gray-50 text-gray-700 p-2 mb-4 text-center" role="alert">
 					<p className="font-medium">
@@ -551,7 +551,7 @@ function App() {
 					</button>
 				</div>
 			)}
-			<div className="grid grid-cols-4 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
+			<div className="grid grid-cols-4 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8 mx-4">
 				{Object.keys(sensorMetrics).map(metric => (
 					<Gauge
 						key={metric}
@@ -571,8 +571,8 @@ function App() {
 				/>
 			</div>
 
-			<div id="chartContainer" ref={chartContainerRef} className="bg-white pt-0 px-4 pb-4 rounded-lg shadow flex-grow overflow-hidden"
-					 style={{ height: 'calc(100vh - 300px)' }}>
+			<div id="chartContainer" ref={chartContainerRef} className="bg-white pt-0 px-4 pb-4 rounded-lg shadow flex-grow overflow-hidden mb-4"
+					 style={{ height: 'calc(100vh - 320px)' }}>
 				<svg ref={svgRef}></svg>
 			</div>
 		</div>
