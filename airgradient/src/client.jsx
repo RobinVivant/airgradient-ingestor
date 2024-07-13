@@ -343,7 +343,7 @@ function App() {
 	function updateChart() {
 		if (!svgRef.current || data.length === 0 || chartDimensions.width === 0 || chartDimensions.height === 0) return;
 
-		const margin = { top: 5, right: 5, bottom: 5, left: 5 };
+		const margin = { top: 20, right: 50, bottom: 50, left: 50 };
 		const width = chartDimensions.width - margin.left - margin.right;
 		const height = chartDimensions.height - margin.top - margin.bottom;
 
@@ -373,7 +373,7 @@ function App() {
 			.ticks(5)
 			.tickFormat(d => {
 				const format = d3.timeFormat("%b %d %H:%M");
-				return format(d);
+				return format(new Date(d.getTime() + d.getTimezoneOffset() * 60000));
 			});
 
 		svg.append("g")
@@ -384,12 +384,12 @@ function App() {
 			.attr("dx", "-.8em")
 			.attr("dy", ".15em")
 			.attr("transform", "rotate(-25)")
-			.style("font-size", "8px");
+			.style("font-size", "10px");
 
 		svg.append("g")
 			.call(d3.axisLeft(y))
 			.selectAll("text")
-			.style("font-size", "8px");
+			.style("font-size", "10px");
 
 		visibleMetricKeys.forEach(metric => {
 			const line = d3.line()
@@ -452,7 +452,7 @@ function App() {
 				const d1 = data[i];
 				const d = x0 - d0.ts > d1.ts - x0 ? d1 : d0;
 
-				tooltip.html(`<strong>${d.ts.toLocaleString(undefined, { 
+				tooltip.html(`<strong>${new Date(d.ts.getTime() + d.ts.getTimezoneOffset() * 60000).toLocaleString(undefined, { 
 					month: 'short', 
 					day: 'numeric', 
 					hour: 'numeric', 
