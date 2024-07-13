@@ -363,8 +363,14 @@ function App() {
 			setTimeRange('custom');
 			setStartDate(x0.toLocaleString(undefined, {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}));
 			setEndDate(x1.toLocaleString(undefined, {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}));
+			
+			// Clear the brush selection
 			svg.select(".brush").call(brush.move, null);
-			setTimeout(() => fetchDataAndUpdateChart(), 0);
+			
+			// Use requestAnimationFrame to ensure the brush is cleared before fetching data
+			requestAnimationFrame(() => {
+				fetchDataAndUpdateChart();
+			});
 		}
 	}
 
