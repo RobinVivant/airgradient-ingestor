@@ -200,10 +200,20 @@ function App() {
 
 
 	React.useEffect(() => {
-		if (data.length > 0) {
+		if (data.length > 0 && svgRef.current) {
 			updateChart();
 		}
-	}, [data, visibleMetrics, svgRef.current?.clientWidth, svgRef.current?.clientHeight]);
+	}, [data, visibleMetrics]);
+
+	React.useEffect(() => {
+		function handleResize() {
+			if (data.length > 0 && svgRef.current) {
+				updateChart();
+			}
+		}
+		window.addEventListener('resize', handleResize);
+		return () => window.removeEventListener('resize', handleResize);
+	}, [data, visibleMetrics]);
 
 	React.useEffect(() => {
 		const fetchDataAndVersion = async () => {
