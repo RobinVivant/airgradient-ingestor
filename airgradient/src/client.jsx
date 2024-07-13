@@ -230,7 +230,7 @@ function RotatingNumber({ value }) {
 	return <span style={style}>{displayValue}</span>;
 }
 
-function TimeRangeSelector({ timeRange, onTimeRangeChange, startDate, endDate, onStartDateChange, onEndDateChange }) {
+function TimeRangeSelector({ timeRange, onTimeRangeChange }) {
 	const timeRanges = [
 		{ value: '15m', label: '15m' },
 		{ value: '30m', label: '30m' },
@@ -243,53 +243,26 @@ function TimeRangeSelector({ timeRange, onTimeRangeChange, startDate, endDate, o
 		{ value: '7d', label: '7d' },
 		{ value: '14d', label: '14d' },
 		{ value: '30d', label: '30d' },
-		{ value: '1y', label: '1y' },
-		{ value: 'custom', label: 'Custom' }
+		{ value: '1y', label: '1y' }
 	];
 
 	return (
-		<div className="w-full space-y-4">
-			<div className="overflow-x-auto whitespace-nowrap">
-				<div className="inline-flex gap-2">
-					{timeRanges.map(({ value, label }) => (
-						<button
-							key={value}
-							onClick={() => onTimeRangeChange(value)}
-							className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 ${
-								timeRange === value
-									? 'bg-indigo-600 text-white'
-									: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-							}`}
-						>
-							{label}
-						</button>
-					))}
-				</div>
+		<div className="w-full">
+			<div className="flex flex-wrap gap-2">
+				{timeRanges.map(({ value, label }) => (
+					<button
+						key={value}
+						onClick={() => onTimeRangeChange(value)}
+						className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 ${
+							timeRange === value
+								? 'bg-indigo-600 text-white'
+								: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+						}`}
+					>
+						{label}
+					</button>
+				))}
 			</div>
-			{timeRange === 'custom' && (
-				<div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-					<div className="w-full md:w-1/2">
-						<label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">Start Date:</label>
-						<input
-							id="startDate"
-							type="datetime-local"
-							value={startDate ? new Date(startDate).toISOString().slice(0, 16) : ''}
-							onChange={(e) => onStartDateChange(new Date(e.target.value).toLocaleString())}
-							className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-						/>
-					</div>
-					<div className="w-full md:w-1/2">
-						<label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">End Date:</label>
-						<input
-							id="endDate"
-							type="datetime-local"
-							value={endDate ? new Date(endDate).toISOString().slice(0, 16) : ''}
-							onChange={(e) => onEndDateChange(new Date(e.target.value).toLocaleString())}
-							className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-						/>
-					</div>
-				</div>
-			)}
 		</div>
 	);
 }
@@ -309,8 +282,6 @@ function getAirQualityLabel(aqi) {
 function App() {
 	const [data, setData] = React.useState([]);
 	const [timeRange, setTimeRange] = React.useState('12h');
-	const [startDate, setStartDate] = React.useState('');
-	const [endDate, setEndDate] = React.useState('');
 	const [visibleMetrics, setVisibleMetrics] = React.useState(
 		Object.fromEntries(Object.entries(sensorMetrics).map(([key, value]) => [key, value.visible]))
 	);
@@ -363,13 +334,8 @@ function App() {
 	async function fetchDataAndUpdateChart() {
 		let start, end;
 
-		if (timeRange === 'custom' && startDate && endDate) {
-			start = new Date(startDate);
-			end = new Date(endDate);
-		} else {
-			end = new Date();
-			start = new Date(end - getTimeRangeInMs(timeRange));
-		}
+		end = new Date();
+		start = new Date(end - getTimeRangeInMs(timeRange));
 
 		try {
 			const response = await fetch(`/sensors/${sensorId}?start=${Math.round(start.getTime() / 1000)}&end=${Math.round(end.getTime() / 1000)}`);
@@ -567,7 +533,7 @@ function App() {
 		<div className="container mx-auto px-4 py-4 sm:py-8 h-screen flex flex-col overflow-hidden">
 			{weatherPrediction && (
 				<div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-2 mb-4" role="alert">
-					<p className="font-bold">Weather Prediction: {weatherPrediction}</p>
+					<p className="font-bold">{weatherPrediction}</p>
 				</div>
 			)}
 			{newVersionAvailable && (
@@ -599,10 +565,6 @@ function App() {
 				<TimeRangeSelector
 					timeRange={timeRange}
 					onTimeRangeChange={setTimeRange}
-					startDate={startDate}
-					endDate={endDate}
-					onStartDateChange={setStartDate}
-					onEndDateChange={setEndDate}
 				/>
 			</div>
 
