@@ -286,6 +286,11 @@ function App() {
 				setTimeout(() => setAnimatingMetrics({}), 1000);
 				return processedData;
 			});
+
+			// Update the brush extent after successful data fetch
+			if (brushExtent) {
+				setBrushExtent([new Date(start), new Date(end)]);
+			}
 		} catch (error) {
 			console.error('Error fetching or processing data:', error);
 			setBrushExtent(null); // Reset brush extent on error
@@ -383,10 +388,16 @@ function App() {
 				return;
 			}
 			const [x0, x1] = event.selection.map(x.invert);
-			setBrushExtent([x0, x1]);
-			setTimeRange('custom');
-			setStartDate(x0.toLocaleString());
-			setEndDate(x1.toLocaleString());
+			
+			// Only update if the brush extent has changed significantly
+			if (!brushExtent || 
+				Math.abs(x0 - brushExtent[0]) > 1000 || 
+				Math.abs(x1 - brushExtent[1]) > 1000) {
+				setBrushExtent([x0, x1]);
+				setTimeRange('custom');
+				setStartDate(x0.toLocaleString());
+				setEndDate(x1.toLocaleString());
+			}
 		}
 
 		// If there's an active brush extent, update the brush
