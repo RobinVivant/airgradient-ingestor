@@ -8,30 +8,6 @@ import aiPluginJson from './ai-plugin.json';
 
 const app = new Hono();
 
-// Add a WebSocket endpoint
-app.get('/ws', (c) => {
-  const upgradeHeader = c.req.header('Upgrade');
-  if (upgradeHeader !== 'websocket') {
-    return c.text('Expected Upgrade: websocket', 426);
-  }
-
-  const pair = new WebSocketPair();
-  const [client, server] = Object.values(pair);
-
-  server.accept();
-
-  server.addEventListener('message', (event) => {
-    if (event.data === 'ping') {
-      server.send('pong');
-    }
-  });
-
-  return new Response(null, {
-    status: 101,
-    webSocket: client,
-  });
-});
-
 // Add a version endpoint
 app.get('/version', (c) => {
   return c.json({ version: c.env.CF_PAGES_COMMIT_SHA || 'development' });
