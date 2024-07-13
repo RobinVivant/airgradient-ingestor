@@ -5,7 +5,7 @@
 	"private": true,
 	"scripts": {
 		"build": "rollup -c",
-		"deploy": "export NO_D1_WARNING=true && export APP_VERSION=$(npm run version --silent) && npm run build && wrangler deploy",
+		"deploy": "export NO_D1_WARNING=true && export APP_VERSION=$(date +%Y.%m.%d.%H%M%S) && npm run build && wrangler deploy",
 		"start": "export NO_D1_WARNING=true && npm run build && wrangler dev",
 		"tail": "export NO_D1_WARNING=true && wrangler tail --format pretty",
 		"db-init": "wrangler d1 execute airgradient --file src/db-init.sql",

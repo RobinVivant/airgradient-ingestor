@@ -233,6 +233,7 @@ function App() {
 	const chartContainerRef = React.useRef(null);
 	const [currentVersion, setCurrentVersion] = React.useState(null);
 	const [lastFetchedVersion, setLastFetchedVersion] = React.useState(null);
+	const [shouldReload, setShouldReload] = React.useState(false);
 	const [chartDimensions, setChartDimensions] = React.useState({ width: 0, height: 0 });
 
 	React.useEffect(() => {
@@ -297,8 +298,9 @@ function App() {
 
 			// Check if version has changed
 			if (lastFetchedVersion && lastFetchedVersion !== version) {
-				console.log('New version detected. Refreshing the page...');
-				window.location.reload();
+				console.log('New version detected. Preparing to refresh the page...');
+				setCurrentVersion(version);
+				setShouldReload(true);
 			} else {
 				setCurrentVersion(version);
 				setLastFetchedVersion(version);
@@ -458,6 +460,27 @@ function App() {
 			...prev,
 			[metric]: !prev[metric]
 		}));
+	}
+
+	React.useEffect(() => {
+		if (shouldReload) {
+			const timer = setTimeout(() => {
+				window.location.reload();
+			}, 5000); // Wait for 5 seconds before reloading
+			return () => clearTimeout(timer);
+		}
+	}, [shouldReload]);
+
+	if (shouldReload) {
+		return (
+			<div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
+				<div className="bg-white p-6 rounded-lg shadow-xl text-center">
+					<h2 className="text-xl font-bold mb-4">New Version Available</h2>
+					<p className="mb-4">A new version of the application is available. The page will refresh in 5 seconds.</p>
+					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+				</div>
+			</div>
+		);
 	}
 
 	return (
