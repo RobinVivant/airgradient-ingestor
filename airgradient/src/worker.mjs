@@ -73,6 +73,7 @@ app.get('/sensors/:id', async c => {
 	start = Math.round(start);
 	end = Math.round(end);
 
+
 	const query = `
 		SELECT double1 AS wifi,
 					 double2 AS rco2,
@@ -83,26 +84,18 @@ app.get('/sensors/:id', async c => {
 					 double7 AS rhum,
 					 double8 AS pressure, timestamp AS ts
 		FROM MEASURES
-		WHERE timestamp >= toDateTime(?)
-			AND timestamp <= toDateTime(?)
+		WHERE timestamp >= toDateTime(${start})
+			AND timestamp <= toDateTime(${end})
 		ORDER BY ts ASC
 	`;
 
 	const API = `https://api.cloudflare.com/client/v4/accounts/${c.env.ACCOUNT_ID}/analytics_engine/sql`;
-	const requestBody = JSON.stringify({
-		sql: query,
-		params: [start, end]
-	});
-	console.log('SQL Query:', query);
-	console.log('Query Parameters:', [start, end]);
-	console.log('Request Body:', requestBody);
 	const queryResponse = await fetch(API, {
 		method: 'POST',
 		headers: {
-			'Authorization': `Bearer ${c.env.API_TOKEN}`,
-			'Content-Type': 'application/json'
+			'Authorization': `Bearer ${c.env.API_TOKEN}`
 		},
-		body: requestBody
+		body: query
 	});
 
 	if (queryResponse.status !== 200) {
