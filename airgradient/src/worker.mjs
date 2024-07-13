@@ -5,6 +5,28 @@ import clientJs from './client.jsx';
 import clientHtml from './client.html';
 const app = new Hono();
 
+function predictWeather(pressure, pressureTrend) {
+    // Simplified Zambretti-inspired algorithm
+    const predictions = [
+        "Settled fine", "Fine weather", "Becoming fine",
+        "Fine, becoming less settled", "Fine, possible showers",
+        "Fairly fine, improving", "Fairly fine, possible showers",
+        "Showery, becoming more unsettled", "Unsettled, rain later",
+        "Unsettled, rain at times", "Rain at times, worse later",
+        "Rain at times, becoming very unsettled"
+    ];
+
+    let index = Math.floor((pressure - 950) / 10);
+    index = Math.max(0, Math.min(index, 11));
+
+    if (pressureTrend > 0) index -= 2;
+    else if (pressureTrend < 0) index += 2;
+
+    index = Math.max(0, Math.min(index, 11));
+
+    return predictions[index];
+}
+
 
 app.use(async (c, next) => {
 	try {
@@ -116,9 +138,26 @@ app.get('/sensors/:id', async c => {
 
 	try {
 		const queryJSON = await queryResponse.json();
+		const data = queryJSON.data;
+
+		// Calculate pressure trend
+		let pressureTrend = 0;
+		if (data.length > 1) {
+			const lastPressure = data[data.length - 1].pressure;
+			const firstPressure = data[0].pressure;
+			pressureTrend = lastPressure - firstPressure;
+		}
+
+		// Get the latest pressure reading
+		const latestPressure = data.length > 0 ? data[data.length - 1].pressure : 1013;
+
+		// Predict weather
+		const weatherPrediction = predictWeather(latestPressure, pressureTrend);
+
 		return c.json({
 			version: c.env.APP_VERSION,
-			data: queryJSON.data
+			data: data,
+			weatherPrediction: weatherPrediction
 		});
 	} catch (error) {
 		console.error('Error parsing JSON:', error);

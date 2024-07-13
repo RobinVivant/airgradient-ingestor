@@ -269,6 +269,7 @@ function App() {
 		Object.fromEntries(Object.entries(sensorMetrics).map(([key, value]) => [key, value.visible]))
 	);
 	const [animatingMetrics, setAnimatingMetrics] = React.useState({});
+	const [weatherPrediction, setWeatherPrediction] = React.useState('');
 
 	const svgRef = React.useRef(null);
 	const chartContainerRef = React.useRef(null);
@@ -329,7 +330,7 @@ function App() {
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
-			const { version, data: rawData } = await response.json();
+			const { version, data: rawData, weatherPrediction } = await response.json();
 
 			if (!Array.isArray(rawData) || rawData.length === 0) {
 				console.warn('Received empty or invalid data');
@@ -344,6 +345,8 @@ function App() {
 				setCurrentVersion(version);
 				setNewVersionAvailable(true);
 			}
+
+			setWeatherPrediction(weatherPrediction);
 
 			let processedData = rawData.map(d => ({
 				...d,
@@ -515,6 +518,11 @@ function App() {
 
 	return (
 		<div className="container mx-auto px-4 py-4 sm:py-8 h-screen flex flex-col">
+			{weatherPrediction && (
+				<div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-2 mb-4" role="alert">
+					<p className="font-bold">Weather Prediction: {weatherPrediction}</p>
+				</div>
+			)}
 			{newVersionAvailable && (
 				<div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4" role="alert">
 					<p className="font-bold">New Version Available</p>
