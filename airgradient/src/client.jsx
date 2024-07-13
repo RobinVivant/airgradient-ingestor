@@ -95,6 +95,21 @@ function reduceDataPoints(data, targetPoints) {
 	return data.filter((_, index) => index % step === 0);
 }
 
+function smoothData(data, windowSize) {
+  return data.map((point, index, array) => {
+    const window = array.slice(Math.max(0, index - windowSize), index + 1);
+    const smoothed = {};
+    Object.keys(point).forEach(key => {
+      if (typeof point[key] === 'number') {
+        smoothed[key] = window.reduce((sum, p) => sum + p[key], 0) / window.length;
+      } else {
+        smoothed[key] = point[key];
+      }
+    });
+    return smoothed;
+  });
+}
+
 function calculateHeatIndex(tempCelsius, relativeHumidity) {
 	const t = tempCelsius * 1.8 + 32;
 	const r = relativeHumidity;
@@ -323,11 +338,16 @@ function App() {
 				setNewVersionAvailable(true);
 			}
 
-			const processedData = rawData.map(d => ({
+			let processedData = rawData.map(d => ({
 				...d,
 				feltTemp: calculateHeatIndex(d.atmp, d.rhum),
 				ts: new Date(d.ts)
 			}));
+
+			// Apply smoothing based on time range
+			const smoothingFactor = getTimeRangeInMs(timeRange) / (15 * 60 * 1000); // 15 minutes as base
+			const windowSize = Math.max(1, Math.round(smoothingFactor));
+			processedData = smoothData(processedData, windowSize);
 
 			setData(prevData => {
 				const newAnimatingMetrics = {};
@@ -400,7 +420,8 @@ function App() {
 		visibleMetricKeys.forEach(metric => {
 			const line = d3.line()
 				.x(d => x(d.ts))
-				.y(d => y(d[metric]));
+				.y(d => y(d[metric]))
+				.curve(d3.curveCatmullRom.alpha(0.5));
 
 			svg.append('path')
 				.datum(data)
