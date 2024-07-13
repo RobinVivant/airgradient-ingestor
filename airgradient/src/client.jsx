@@ -230,12 +230,12 @@ function App() {
 	const svgRef = React.useRef(null);
 	const chartContainerRef = React.useRef(null);
 	const [currentVersion, setCurrentVersion] = React.useState(null);
+	const [lastFetchedVersion, setLastFetchedVersion] = React.useState(null);
 	const [chartDimensions, setChartDimensions] = React.useState({ width: 0, height: 0 });
 
 	React.useEffect(() => {
 		const fetchDataAndVersion = async () => {
 			await fetchDataAndUpdateChart();
-			await fetchVersion();
 		};
 
 		fetchDataAndVersion(); // Initial fetch
@@ -269,20 +269,6 @@ function App() {
 		};
 	}, []);
 
-	async function fetchVersion() {
-		try {
-			const response = await fetch('/version');
-			const { version } = await response.json();
-			if (currentVersion && currentVersion !== version) {
-				console.log('New version detected. Refreshing the page...');
-				window.location.reload();
-			} else {
-				setCurrentVersion(version);
-			}
-		} catch (error) {
-			console.error('Error fetching version:', error);
-		}
-	}
 
 	async function fetchDataAndUpdateChart() {
 		let start, end;
@@ -300,11 +286,20 @@ function App() {
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
-			const rawData = await response.json();
+			const { version, data: rawData } = await response.json();
 
 			if (!Array.isArray(rawData) || rawData.length === 0) {
 				console.warn('Received empty or invalid data');
 				return; // Exit the function early
+			}
+
+			// Check if version has changed
+			if (lastFetchedVersion && lastFetchedVersion !== version) {
+				console.log('New version detected. Refreshing the page...');
+				window.location.reload();
+			} else {
+				setCurrentVersion(version);
+				setLastFetchedVersion(version);
 			}
 
 			const processedData = rawData.map(d => ({
