@@ -5,10 +5,6 @@ import clientJs from './client.jsx';
 import clientHtml from './client.html';
 const app = new Hono();
 
-// Add a version endpoint
-app.get('/version', (c) => {
-	return c.json({ version: c.env.APP_VERSION });
-});
 
 app.use(async (c, next) => {
 	try {
@@ -120,7 +116,10 @@ app.get('/sensors/:id', async c => {
 
 	try {
 		const queryJSON = await queryResponse.json();
-		return c.json(queryJSON.data);
+		return c.json({
+			version: c.env.APP_VERSION,
+			data: queryJSON.data
+		});
 	} catch (error) {
 		console.error('Error parsing JSON:', error);
 		return c.json({ error: 'An error occurred while parsing data', details: error.message }, 500);
