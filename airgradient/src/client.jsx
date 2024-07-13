@@ -228,7 +228,10 @@ function App() {
 	const [animatingMetrics, setAnimatingMetrics] = React.useState({});
 
 	const svgRef = React.useRef(null);
+	const chartContainerRef = React.useRef(null);
 	const [currentVersion, setCurrentVersion] = React.useState(null);
+	const [chartDimensions, setChartDimensions] = React.useState({ width: 0, height: 0 });
+
 	React.useEffect(() => {
 		const fetchDataAndVersion = async () => {
 			await fetchDataAndUpdateChart();
@@ -242,10 +245,29 @@ function App() {
 	}, [timeRange, startDate, endDate]);
 
 	React.useEffect(() => {
-		if (data.length > 0) {
+		if (data.length > 0 && chartDimensions.width > 0 && chartDimensions.height > 0) {
 			updateChart();
 		}
-	}, [data, visibleMetrics]);
+	}, [data, visibleMetrics, chartDimensions]);
+
+	React.useEffect(() => {
+		const resizeObserver = new ResizeObserver(entries => {
+			for (let entry of entries) {
+				const { width, height } = entry.contentRect;
+				setChartDimensions({ width, height });
+			}
+		});
+
+		if (chartContainerRef.current) {
+			resizeObserver.observe(chartContainerRef.current);
+		}
+
+		return () => {
+			if (chartContainerRef.current) {
+				resizeObserver.unobserve(chartContainerRef.current);
+			}
+		};
+	}, []);
 
 	async function fetchVersion() {
 		try {
@@ -310,18 +332,17 @@ function App() {
 	}
 
 	function updateChart() {
-		if (!svgRef.current || data.length === 0) return;
+		if (!svgRef.current || data.length === 0 || chartDimensions.width === 0 || chartDimensions.height === 0) return;
 
 		const margin = { top: 20, right: 20, bottom: 50, left: 60 };
-		const width = svgRef.current.clientWidth - margin.left - margin.right;
-		const height = svgRef.current.clientHeight - margin.top - margin.bottom;
+		const width = chartDimensions.width - margin.left - margin.right;
+		const height = chartDimensions.height - margin.top - margin.bottom;
 
 		d3.select(svgRef.current).selectAll("*").remove();
 
 		const svg = d3.select(svgRef.current)
-			.append("svg")
-			.attr("width", width + margin.left + margin.right)
-			.attr("height", height + margin.top + margin.bottom)
+			.attr("width", chartDimensions.width)
+			.attr("height", chartDimensions.height)
 			.append("g")
 			.attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -406,8 +427,8 @@ function App() {
 				/>
 			</div>
 
-			<div id="chartContainer" className="bg-white p-4 rounded-lg shadow flex-grow" style={{ height: 'calc(100vh - 300px)' }}>
-				<svg ref={svgRef} width="100%" height="100%"></svg>
+			<div id="chartContainer" ref={chartContainerRef} className="bg-white p-4 rounded-lg shadow flex-grow" style={{ height: 'calc(100vh - 300px)' }}>
+				<svg ref={svgRef}></svg>
 			</div>
 		</div>
 	);
