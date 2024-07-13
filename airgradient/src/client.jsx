@@ -226,6 +226,10 @@ function App() {
 			const height = svgRef.current.clientHeight;
 			const margin = { top: 20, right: 20, bottom: 30, left: 50 };
 
+			const x = d3.scaleTime()
+				.domain(d3.extent(data, d => d.ts))
+				.range([margin.left, width - margin.right]);
+
 			const brush = d3.brushX()
 				.extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]])
 				.on("end", brushended);
@@ -241,7 +245,7 @@ function App() {
 					console.log("Brush selection cleared");
 					return;
 				}
-				const [x0, x1] = event.selection.map(d => x.invert(d - margin.left));
+				const [x0, x1] = event.selection.map(d => x.invert(d));
 				setTimeRange('custom');
 				setStartDate(x0.toLocaleString());
 				setEndDate(x1.toLocaleString());
