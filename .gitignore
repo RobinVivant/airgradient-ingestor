@@ -1,6 +1,6 @@
 /.idea/
 /airgradient/node_modules/
-
+*.iml
 /airgradient/dist/
 .aider*
 /airgradient/package-lock.json
