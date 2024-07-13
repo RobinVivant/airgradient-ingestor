@@ -530,10 +530,13 @@ function App() {
 
 
 	return (
-		<div className="container mx-auto px-4 py-4 sm:py-8 h-screen flex flex-col overflow-hidden">
+		<div className="h-screen flex flex-col overflow-hidden">
+			<header className="bg-gray-50 py-2 mb-4 text-center">
+				<h1 className="text-lg font-semibold text-gray-700">AirGradient Sensor Dashboard</h1>
+			</header>
 			{weatherPrediction && (
-				<div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-2 mb-4" role="alert">
-					<p className="font-bold">
+				<div className="bg-gray-50 text-gray-700 p-2 mb-4 text-center" role="alert">
+					<p className="font-medium">
 						<span className="text-2xl mr-2">{weatherPrediction.icon}</span>
 						{weatherPrediction.text}
 					</p>
