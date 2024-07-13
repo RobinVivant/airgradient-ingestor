@@ -50,6 +50,12 @@ const sensorMetrics = {
 		unit: '',
 		gaugeColor: '#FF8C00',
 		visible: false
+	},
+	aqi: {
+		label: 'Air Quality',
+		unit: '',
+		gaugeColor: '#8B008B',
+		visible: true
 	}
 };
 
@@ -117,6 +123,29 @@ function smoothData(data, windowSize) {
   });
 }
 
+function calculateAirQualityIndex(pm25, co2) {
+    // PM2.5 index
+    let pm25Index;
+    if (pm25 <= 12) pm25Index = 1;
+    else if (pm25 <= 35.4) pm25Index = 2;
+    else if (pm25 <= 55.4) pm25Index = 3;
+    else if (pm25 <= 150.4) pm25Index = 4;
+    else if (pm25 <= 250.4) pm25Index = 5;
+    else pm25Index = 6;
+
+    // CO2 index
+    let co2Index;
+    if (co2 <= 1000) co2Index = 1;
+    else if (co2 <= 2000) co2Index = 2;
+    else if (co2 <= 5000) co2Index = 3;
+    else if (co2 <= 10000) co2Index = 4;
+    else if (co2 <= 40000) co2Index = 5;
+    else co2Index = 6;
+
+    // Overall index (worst of the two)
+    return Math.max(pm25Index, co2Index);
+}
+
 function calculateHeatIndex(tempCelsius, relativeHumidity) {
 	const t = tempCelsius * 1.8 + 32;
 	const r = relativeHumidity;
@@ -158,6 +187,8 @@ function Gauge({ metric, value, visible, onToggle, isAnimating }) {
 			parseFloat(value) % 1 === 0 ? parseInt(value) : parseFloat(value).toFixed(1)
 		: metric === 'pressure' || metric === 'tvoc_index' || metric === 'nox_index' ?
 			parseFloat(value) % 1 === 0 ? parseInt(value) : parseFloat(value).toFixed(1)
+		: metric === 'aqi' ?
+			getAirQualityLabel(Math.round(parseFloat(value)))
 		: parseFloat(value).toFixed(1))
 		: 'N/A';
 
@@ -260,6 +291,18 @@ function TimeRangeSelector({ timeRange, onTimeRangeChange, startDate, endDate, o
 	);
 }
 
+function getAirQualityLabel(aqi) {
+	switch(aqi) {
+		case 1: return 'Good';
+		case 2: return 'Moderate';
+		case 3: return 'Unhealthy for Sensitive Groups';
+		case 4: return 'Unhealthy';
+		case 5: return 'Very Unhealthy';
+		case 6: return 'Hazardous';
+		default: return 'Unknown';
+	}
+}
+
 function App() {
 	const [data, setData] = React.useState([]);
 	const [timeRange, setTimeRange] = React.useState('12h');
@@ -351,6 +394,7 @@ function App() {
 			let processedData = rawData.map(d => ({
 				...d,
 				feltTemp: calculateHeatIndex(d.atmp, d.rhum),
+				aqi: calculateAirQualityIndex(d.pm02, d.rco2),
 				ts: new Date(d.ts)
 			}));
 
