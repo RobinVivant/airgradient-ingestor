@@ -175,10 +175,16 @@ function App() {
 	}, [timeRange, startDate, endDate]);
 
 	React.useEffect(() => {
+		fetchDataAndUpdateChart();
+		const interval = setInterval(fetchDataAndUpdateChart, 30000);
+		return () => clearInterval(interval);
+	}, [timeRange, startDate, endDate]);
+
+	React.useEffect(() => {
 		if (data.length > 0) {
 			updateChart();
 		}
-	}, [data]);
+	}, [data, visibleMetrics]);
 
 	async function fetchDataAndUpdateChart() {
 		let start, end;
@@ -198,7 +204,8 @@ function App() {
 			const reducedData = reduceDataPoints(rawData, 100);
 			const processedData = reducedData.map(d => ({
 				...d,
-				feltTemp: calculateHeatIndex(d.atmp, d.rhum)
+				feltTemp: calculateHeatIndex(d.atmp, d.rhum),
+				ts: new Date(d.ts)
 			}));
 
 			setData(processedData);
@@ -208,102 +215,60 @@ function App() {
 	}
 
 	function updateChart() {
-		if (!chartRef.current) return;
+		if (!svgRef.current) return;
 
-		const ctx = chartRef.current.getContext('2d');
+		const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+		const width = svgRef.current.clientWidth - margin.left - margin.right;
+		const height = svgRef.current.clientHeight - margin.top - margin.bottom;
 
-		if (chart) {
-			chart.destroy();
-		}
+		d3.select(svgRef.current).selectAll("*").remove();
 
-		const newChart = new Chart(ctx, {
-			type: 'line',
-			data: {
-				labels: data.map(d => new Date(d.ts)),
-				datasets: Object.keys(sensorMetrics).map(metric =>
-					createDataset(sensorMetrics[metric].label, data.map(d => d[metric]), sensorMetrics[metric].gaugeColor, !sensorMetrics[metric].visible)
-				)
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				animation: { duration: 0 },
-				hover: { animationDuration: 0 },
-				responsiveAnimationDuration: 0,
-				scales: {
-					x: {
-						type: 'time',
-						time: {
-							unit: 'hour',
-							displayFormats: { hour: 'MMM d, HH:mm' },
-							tooltipFormat: 'MMM d, yyyy HH:mm'
-						},
-						title: { display: false },
-						ticks: {
-							source: 'auto',
-							autoSkip: true,
-							maxRotation: 0,
-							major: { enabled: true },
-							font: function(context) {
-								if (context.tick && context.tick.major) {
-									return { weight: 'bold' };
-								}
-							}
-						},
-						adapters: {
-							date: { zone: 'local' }
-						}
-					},
-					y: {
-						beginAtZero: false,
-						title: { display: false }
-					}
-				},
-				plugins: {
-					legend: { display: false },
-					tooltip: {
-						mode: 'index',
-						intersect: false,
-						animation: { duration: 0 }
-					}
-				},
-				elements: {
-					point: { radius: 0 },
-					line: { borderWidth: 1 }
-				},
-				transitions: {
-					active: { animation: { duration: 0 } }
-				}
+		const svg = d3.select(svgRef.current)
+			.append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+			.append("g")
+			.attr("transform", `translate(${margin.left},${margin.top})`);
+
+		const x = d3.scaleTime()
+			.domain(d3.extent(data, d => d.ts))
+			.range([0, width]);
+
+		const y = d3.scaleLinear()
+			.domain([
+				d3.min(data, d => Math.min(...Object.keys(sensorMetrics).map(metric => d[metric]))),
+				d3.max(data, d => Math.max(...Object.keys(sensorMetrics).map(metric => d[metric])))
+			])
+			.range([height, 0]);
+
+		svg.append("g")
+			.attr("transform", `translate(0,${height})`)
+			.call(d3.axisBottom(x));
+
+		svg.append("g")
+			.call(d3.axisLeft(y));
+
+		Object.keys(sensorMetrics).forEach(metric => {
+			if (visibleMetrics[metric]) {
+				const line = d3.line()
+					.x(d => x(d.ts))
+					.y(d => y(d[metric]));
+
+				svg.append("path")
+					.datum(data)
+					.attr("fill", "none")
+					.attr("stroke", sensorMetrics[metric].gaugeColor)
+					.attr("stroke-width", 1.5)
+					.attr("d", line);
 			}
 		});
-
-		setChart(newChart);
-	}
-
-	function createDataset(label, data, color, hidden = false) {
-		return {
-			label: label,
-			data: data,
-			borderColor: color,
-			backgroundColor: 'transparent',
-			fill: false,
-			tension: 0.1,
-			hidden: hidden
-		};
 	}
 
 	function toggleChartSeries(metric) {
-		setVisibleMetrics(prev => {
-			const newVisibleMetrics = { ...prev, [metric]: !prev[metric] };
-			if (chart) {
-				const datasetIndex = chart.data.datasets.findIndex(dataset => dataset.label === sensorMetrics[metric].label);
-				if (datasetIndex > -1) {
-					chart.setDatasetVisibility(datasetIndex, newVisibleMetrics[metric]);
-					chart.update();
-				}
-			}
-			return newVisibleMetrics;
-		});
+		setVisibleMetrics(prev => ({
+			...prev,
+			[metric]: !prev[metric]
+		}));
 	}
 
 	return (
@@ -333,7 +298,7 @@ function App() {
 			</div>
 
 			<div id="chartContainer" className="bg-white p-4 rounded-lg shadow flex-grow">
-				<canvas ref={chartRef} id="airQualityChart"></canvas>
+				<svg ref={svgRef} width="100%" height="100%"></svg>
 			</div>
 		</div>
 	);
