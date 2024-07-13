@@ -59,19 +59,32 @@ function getTimeRangeInMs(timeRange) {
 	const day = 24 * hour;
 	const year = 365 * day;
 	switch (timeRange) {
-		case '15m': return 15 * minute;
-		case '30m': return 30 * minute;
-		case '1h': return hour;
-		case '3h': return 3 * hour;
-		case '6h': return 6 * hour;
-		case '12h': return 12 * hour;
-		case '24h': return day;
-		case '2d': return 2 * day;
-		case '7d': return 7 * day;
-		case '14d': return 14 * day;
-		case '30d': return 30 * day;
-		case '1y': return year;
-		default: return hour;
+		case '15m':
+			return 15 * minute;
+		case '30m':
+			return 30 * minute;
+		case '1h':
+			return hour;
+		case '3h':
+			return 3 * hour;
+		case '6h':
+			return 6 * hour;
+		case '12h':
+			return 12 * hour;
+		case '24h':
+			return day;
+		case '2d':
+			return 2 * day;
+		case '7d':
+			return 7 * day;
+		case '14d':
+			return 14 * day;
+		case '30d':
+			return 30 * day;
+		case '1y':
+			return year;
+		default:
+			return hour;
 	}
 }
 
@@ -113,11 +126,11 @@ function Gauge({ metric, value, visible, onToggle, isAnimating }) {
 		filter: visible ? 'none' : 'grayscale(100%)',
 		cursor: 'pointer',
 		transition: 'all 0.3s ease',
-		transform: isAnimating ? 'scale(1.05)' : 'scale(1)',
+		transform: isAnimating ? 'scale(1.05)' : 'scale(1)'
 	};
 
-	const displayValue = value !== 'N/A' ? 
-		(metric === 'pressure' ? parseFloat(value).toFixed(0) : parseFloat(value).toFixed(1)) 
+	const displayValue = value !== 'N/A' ?
+		(metric === 'pressure' ? parseFloat(value).toFixed(0) : parseFloat(value).toFixed(1))
 		: 'N/A';
 
 	return (
@@ -149,7 +162,7 @@ function RotatingNumber({ value }) {
 	const style = {
 		display: 'inline-block',
 		transition: 'all 0.5s',
-		transform: isRotating ? 'rotateX(90deg)' : 'rotateX(0deg)',
+		transform: isRotating ? 'rotateX(90deg)' : 'rotateX(0deg)'
 	};
 
 	return <span style={style}>{displayValue}</span>;
@@ -306,7 +319,7 @@ function App() {
 			}
 
 			// Check if version has changed
-			if (lastFetchedVersion && lastFetchedVersion !== version) {
+			if (lastFetchedVersion !== version) {
 				console.log('New version detected. Preparing to refresh the page...');
 				setCurrentVersion(version);
 				setShouldReload(true);
@@ -347,13 +360,13 @@ function App() {
 		const width = chartDimensions.width - margin.left - margin.right;
 		const height = chartDimensions.height - margin.top - margin.bottom;
 
-		d3.select(svgRef.current).selectAll("*").remove();
+		d3.select(svgRef.current).selectAll('*').remove();
 
 		const svg = d3.select(svgRef.current)
-			.attr("width", chartDimensions.width)
-			.attr("height", chartDimensions.height)
-			.append("g")
-			.attr("transform", `translate(${margin.left},${margin.top})`);
+			.attr('width', chartDimensions.width)
+			.attr('height', chartDimensions.height)
+			.append('g')
+			.attr('transform', `translate(${margin.left},${margin.top})`);
 
 		const visibleMetricKeys = Object.keys(sensorMetrics).filter(metric => visibleMetrics[metric]);
 
@@ -372,78 +385,78 @@ function App() {
 		const xAxis = d3.axisBottom(x)
 			.ticks(5)
 			.tickFormat(d => {
-				const format = d3.timeFormat("%b %d %H:%M");
+				const format = d3.timeFormat('%b %d %H:%M');
 				return format(new Date(d.getTime() + d.getTimezoneOffset() * 60000));
 			});
 
-		svg.append("g")
-			.attr("transform", `translate(0,${height})`)
+		svg.append('g')
+			.attr('transform', `translate(0,${height})`)
 			.call(xAxis)
-			.selectAll("text")
-			.style("text-anchor", "end")
-			.attr("dx", "-.8em")
-			.attr("dy", ".15em")
-			.attr("transform", "rotate(-25)")
-			.style("font-size", "10px");
+			.selectAll('text')
+			.style('text-anchor', 'end')
+			.attr('dx', '-.8em')
+			.attr('dy', '.15em')
+			.attr('transform', 'rotate(-25)')
+			.style('font-size', '10px');
 
-		svg.append("g")
+		svg.append('g')
 			.call(d3.axisLeft(y))
-			.selectAll("text")
-			.style("font-size", "10px");
+			.selectAll('text')
+			.style('font-size', '10px');
 
 		visibleMetricKeys.forEach(metric => {
 			const line = d3.line()
 				.x(d => x(d.ts))
 				.y(d => y(d[metric]));
 
-			svg.append("path")
+			svg.append('path')
 				.datum(data)
-				.attr("fill", "none")
-				.attr("stroke", sensorMetrics[metric].gaugeColor)
-				.attr("stroke-width", 1.5)
-				.attr("d", line);
+				.attr('fill', 'none')
+				.attr('stroke', sensorMetrics[metric].gaugeColor)
+				.attr('stroke-width', 1.5)
+				.attr('d', line);
 		});
 
 		// Add a vertical line
-		const verticalLine = svg.append("line")
-			.attr("opacity", 0)
-			.attr("y1", 0)
-			.attr("y2", height)
-			.attr("stroke", "black")
-			.attr("stroke-width", 1)
-			.attr("pointer-events", "none");
+		const verticalLine = svg.append('line')
+			.attr('opacity', 0)
+			.attr('y1', 0)
+			.attr('y2', height)
+			.attr('stroke', 'black')
+			.attr('stroke-width', 1)
+			.attr('pointer-events', 'none');
 
 		// Add a tooltip
-		const tooltip = d3.select("body").append("div")
-			.attr("class", "tooltip")
-			.style("opacity", 0)
-			.style("position", "absolute")
-			.style("background-color", "white")
-			.style("border", "solid")
-			.style("border-width", "1px")
-			.style("border-radius", "5px")
-			.style("padding", "10px")
-			.style("pointer-events", "none")
-			.style("transform", "translate(-50%, -100%)");
+		const tooltip = d3.select('body').append('div')
+			.attr('class', 'tooltip')
+			.style('opacity', 0)
+			.style('position', 'absolute')
+			.style('background-color', 'white')
+			.style('border', 'solid')
+			.style('border-width', '1px')
+			.style('border-radius', '5px')
+			.style('padding', '10px')
+			.style('pointer-events', 'none')
+			.style('transform', 'translate(-50%, -100%)');
 
 		// Create a rect to capture mouse events
-		svg.append("rect")
-			.attr("width", width)
-			.attr("height", height)
-			.style("fill", "none")
-			.style("pointer-events", "all")
-			.on("mouseover touchstart", () => {
-				verticalLine.attr("opacity", 1);
-				tooltip.style("opacity", 1);
+		svg.append('rect')
+			.attr('width', width)
+			.attr('height', height)
+			.style('fill', 'none')
+			.style('pointer-events', 'all')
+			.on('mouseover touchstart', () => {
+				verticalLine.attr('opacity', 1);
+				tooltip.style('opacity', 1);
 			})
-			.on("mouseout touchend", () => {
-				verticalLine.attr("opacity", 0);
-				tooltip.style("opacity", 0);
+			.on('mouseout touchend', () => {
+				verticalLine.attr('opacity', 0);
+				tooltip.style('opacity', 0);
 			})
-			.on("mousemove touchmove", (event) => {
+			.on('mousemove touchmove', (event) => {
 				event.preventDefault();
 				const [xPos] = d3.pointer(event.type.startsWith('touch') ? event.touches[0] : event, svg.node());
-				verticalLine.attr("x1", xPos).attr("x2", xPos);
+				verticalLine.attr('x1', xPos).attr('x2', xPos);
 
 				const x0 = x.invert(xPos);
 				const bisectDate = d3.bisector(d => d.ts).left;
@@ -452,18 +465,18 @@ function App() {
 				const d1 = data[i];
 				const d = x0 - d0.ts > d1.ts - x0 ? d1 : d0;
 
-				tooltip.html(`<strong>${new Date(d.ts.getTime() + d.ts.getTimezoneOffset() * 60000).toLocaleString(undefined, { 
-					month: 'short', 
-					day: 'numeric', 
-					hour: 'numeric', 
-					minute: 'numeric' 
+				tooltip.html(`<strong>${new Date(d.ts.getTime() + d.ts.getTimezoneOffset() * 60000).toLocaleString(undefined, {
+					month: 'short',
+					day: 'numeric',
+					hour: 'numeric',
+					minute: 'numeric'
 				})}</strong><br>${
-					visibleMetricKeys.map(metric => 
+					visibleMetricKeys.map(metric =>
 						`<span style="color:${sensorMetrics[metric].gaugeColor}">${d[metric].toFixed(1)}${sensorMetrics[metric].unit}</span>`
 					).join('<br>')
 				}`)
-				.style("left", (event.type.startsWith('touch') ? event.touches[0].pageX : event.pageX) + "px")
-				.style("top", (event.type.startsWith('touch') ? event.touches[0].pageY : event.pageY) - 10 + "px");
+					.style('left', (event.type.startsWith('touch') ? event.touches[0].pageX : event.pageX) + 'px')
+					.style('top', (event.type.startsWith('touch') ? event.touches[0].pageY : event.pageY) - 10 + 'px');
 			});
 	}
 
@@ -499,10 +512,10 @@ function App() {
 		<div className="container mx-auto px-4 py-4 sm:py-8 h-screen flex flex-col">
 			<div className="grid grid-cols-4 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
 				{Object.keys(sensorMetrics).map(metric => (
-					<Gauge 
-						key={metric} 
-						metric={metric} 
-						value={data.length > 0 && data[data.length - 1][metric] !== undefined ? data[data.length - 1][metric] : 'N/A'} 
+					<Gauge
+						key={metric}
+						metric={metric}
+						value={data.length > 0 && data[data.length - 1][metric] !== undefined ? data[data.length - 1][metric] : 'N/A'}
 						visible={visibleMetrics[metric]}
 						onToggle={toggleChartSeries}
 						isAnimating={animatingMetrics[metric]}
@@ -511,8 +524,8 @@ function App() {
 			</div>
 
 			<div className="mb-8">
-				<TimeRangeSelector 
-					timeRange={timeRange} 
+				<TimeRangeSelector
+					timeRange={timeRange}
 					onTimeRangeChange={setTimeRange}
 					startDate={startDate}
 					endDate={endDate}
@@ -521,7 +534,8 @@ function App() {
 				/>
 			</div>
 
-			<div id="chartContainer" ref={chartContainerRef} className="bg-white p-4 rounded-lg shadow flex-grow" style={{ height: 'calc(max(500px, 100vh - 300px))' }}>
+			<div id="chartContainer" ref={chartContainerRef} className="bg-white p-4 rounded-lg shadow flex-grow"
+					 style={{ height: 'calc(max(500px, 100vh - 300px))' }}>
 				<svg ref={svgRef}></svg>
 			</div>
 		</div>
