@@ -313,6 +313,7 @@ function App() {
 				setCurrentVersion(version);
 			} else if (currentVersion !== version) {
 				console.log('New version detected.');
+				setCurrentVersion(version);
 				setNewVersionAvailable(true);
 			}
 
@@ -381,10 +382,8 @@ function App() {
 			.attr('transform', `translate(0,${height})`)
 			.call(xAxis)
 			.selectAll('text')
-			.style('text-anchor', 'end')
-			.attr('dx', '-.8em')
-			.attr('dy', '.15em')
-			.attr('transform', 'rotate(-45)')
+			.style('text-anchor', 'middle')
+			.attr('dy', '1em')
 			.style('font-size', '10px');
 
 		svg.append('g')
