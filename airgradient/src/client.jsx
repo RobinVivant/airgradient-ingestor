@@ -101,8 +101,8 @@ function calculateHeatIndex(tempCelsius, relativeHumidity) {
 	return Number(((hi - 32) / 1.8).toFixed(1));
 }
 
-function Gauge({ metric, value, onToggle }) {
-	const { label, unit, gaugeColor, visible } = sensorMetrics[metric];
+function Gauge({ metric, value, visible, onToggle }) {
+	const { label, unit, gaugeColor } = sensorMetrics[metric];
 	const style = {
 		opacity: visible ? 1 : 0.5,
 		filter: visible ? 'none' : 'grayscale(100%)',
@@ -162,6 +162,9 @@ function App() {
 	const [startDate, setStartDate] = React.useState('');
 	const [endDate, setEndDate] = React.useState('');
 	const [chart, setChart] = React.useState(null);
+	const [visibleMetrics, setVisibleMetrics] = React.useState(
+		Object.fromEntries(Object.entries(sensorMetrics).map(([key, value]) => [key, value.visible]))
+	);
 
 	const chartRef = React.useRef(null);
 
@@ -290,14 +293,17 @@ function App() {
 	}
 
 	function toggleChartSeries(metric) {
-		sensorMetrics[metric].visible = !sensorMetrics[metric].visible;
-		if (chart) {
-			const datasetIndex = chart.data.datasets.findIndex(dataset => dataset.label === sensorMetrics[metric].label);
-			if (datasetIndex > -1) {
-				chart.setDatasetVisibility(datasetIndex, sensorMetrics[metric].visible);
-				chart.update();
+		setVisibleMetrics(prev => {
+			const newVisibleMetrics = { ...prev, [metric]: !prev[metric] };
+			if (chart) {
+				const datasetIndex = chart.data.datasets.findIndex(dataset => dataset.label === sensorMetrics[metric].label);
+				if (datasetIndex > -1) {
+					chart.setDatasetVisibility(datasetIndex, newVisibleMetrics[metric]);
+					chart.update();
+				}
 			}
-		}
+			return newVisibleMetrics;
+		});
 	}
 
 	return (
@@ -308,6 +314,7 @@ function App() {
 						key={metric} 
 						metric={metric} 
 						value={data.length > 0 ? data[data.length - 1][metric].toFixed(1) : 'N/A'} 
+						visible={visibleMetrics[metric]}
 						onToggle={toggleChartSeries}
 					/>
 				))}
