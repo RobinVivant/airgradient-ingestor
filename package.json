@@ -1,0 +1,12 @@
+{
+  "name": "airgradient-ingestor",
+  "version": "1.0.0",
+  "description": "Root package for airgradient-ingestor",
+  "scripts": {
+    "deploy": "cd airgradient && npm run deploy",
+    "start": "cd airgradient && npm run start",
+    "build": "cd airgradient && npm run build",
+    "tail": "cd airgradient && npm run tail",
+    "db-init": "cd airgradient && npm run db-init"
+  }
+}
