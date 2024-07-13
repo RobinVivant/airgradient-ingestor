@@ -57,6 +57,7 @@ function getTimeRangeInMs(timeRange) {
 	const minute = 60 * 1000;
 	const hour = 60 * minute;
 	const day = 24 * hour;
+	const year = 365 * day;
 	switch (timeRange) {
 		case '15m': return 15 * minute;
 		case '30m': return 30 * minute;
@@ -69,6 +70,7 @@ function getTimeRangeInMs(timeRange) {
 		case '7d': return 7 * day;
 		case '14d': return 14 * day;
 		case '30d': return 30 * day;
+		case '1y': return year;
 		default: return hour;
 	}
 }
@@ -166,6 +168,7 @@ function TimeRangeSelector({ timeRange, onTimeRangeChange, startDate, endDate, o
 		{ value: '7d', label: '7d' },
 		{ value: '14d', label: '14d' },
 		{ value: '30d', label: '30d' },
+		{ value: '1y', label: '1y' },
 		{ value: 'custom', label: 'Custom' }
 	];
 
@@ -281,8 +284,7 @@ function App() {
 				return; // Exit the function early
 			}
 
-			const reducedData = reduceDataPoints(rawData, 100);
-			const processedData = reducedData.map(d => ({
+			const processedData = rawData.map(d => ({
 				...d,
 				feltTemp: calculateHeatIndex(d.atmp, d.rhum),
 				ts: new Date(d.ts)

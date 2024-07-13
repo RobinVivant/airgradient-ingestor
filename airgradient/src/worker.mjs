@@ -63,19 +63,34 @@ app.get('/sensors/:id', async c => {
 	start = Math.round(start);
 	end = Math.round(end);
 
+	const timeRange = end - start;
+	let interval;
+
+	if (timeRange > 30 * 24 * 60 * 60) { // More than 30 days
+		interval = '1 hour';
+	} else if (timeRange > 7 * 24 * 60 * 60) { // More than 7 days
+		interval = '15 minute';
+	} else if (timeRange > 24 * 60 * 60) { // More than 1 day
+		interval = '5 minute';
+	} else {
+		interval = '1 minute';
+	}
 
 	const query = `
-		SELECT double1 AS wifi,
-					 double2 AS rco2,
-					 double3 AS pm02,
-					 double4 AS tvoc_index,
-					 double5 AS nox_index,
-					 double6 AS atmp,
-					 double7 AS rhum,
-					 double8 AS pressure, timestamp AS ts
+		SELECT
+			toStartOfInterval(timestamp, INTERVAL ${interval}) AS ts,
+			avg(double1) AS wifi,
+			avg(double2) AS rco2,
+			avg(double3) AS pm02,
+			avg(double4) AS tvoc_index,
+			avg(double5) AS nox_index,
+			avg(double6) AS atmp,
+			avg(double7) AS rhum,
+			avg(double8) AS pressure
 		FROM MEASURES
 		WHERE timestamp >= toDateTime(${start})
 			AND timestamp <= toDateTime(${end})
+		GROUP BY ts
 		ORDER BY ts ASC
 	`;
 
