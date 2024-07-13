@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import clientJs from './client.js';
+import clientJs from './client.jsx';
 import clientHtml from './client.html';
 import openapiYaml from './openapi.yaml';
 import aiPluginJson from './ai-plugin.json';

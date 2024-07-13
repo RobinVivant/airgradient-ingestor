@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/airgradient/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/airgradient/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/.aider.tags.cache.v3" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
