@@ -135,7 +135,7 @@ function Gauge({ metric, value, visible, onToggle, isAnimating }) {
 
 	return (
 		<div className="bg-white p-2 sm:p-4 rounded-lg shadow" style={style} onClick={() => onToggle(metric)}>
-			<div className="text-sm sm:text-lg font-semibold" style={{ color: gaugeColor }}>
+			<div className="text-xs sm:text-lg font-semibold" style={{ color: gaugeColor }}>
 				<RotatingNumber value={displayValue} />
 				{value !== 'N/A' && unit}
 			</div>
