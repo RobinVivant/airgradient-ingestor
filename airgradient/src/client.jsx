@@ -334,12 +334,22 @@ function App() {
 				.x(d => x(d.ts))
 				.y(d => y(d[metric]));
 
-			svg.append("path")
+			const path = svg.append("path")
 				.datum(data)
 				.attr("fill", "none")
 				.attr("stroke", sensorMetrics[metric].gaugeColor)
 				.attr("stroke-width", 1.5)
 				.attr("d", line);
+
+			// Animate the path
+			const totalLength = path.node().getTotalLength();
+			path
+				.attr("stroke-dasharray", totalLength + " " + totalLength)
+				.attr("stroke-dashoffset", totalLength)
+				.transition()
+				.duration(1000)
+				.ease(d3.easeLinear)
+				.attr("stroke-dashoffset", 0);
 		});
 	}
 
