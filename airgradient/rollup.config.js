@@ -1,8 +1,8 @@
-import {nodeResolve} from "@rollup/plugin-node-resolve";
+import { nodeResolve } from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import terser from "@rollup/plugin-terser";
-import {string} from 'rollup-plugin-string';
-
+import { string } from 'rollup-plugin-string';
+import babel from '@rollup/plugin-babel';
 
 export default {
 	input: 'src/worker.mjs',
@@ -19,7 +19,12 @@ export default {
 	},
 	plugins: [
 		commonjs(),
-		nodeResolve({browser: true}),
+		nodeResolve({ browser: true }),
+		babel({
+			babelHelpers: 'bundled',
+			presets: ['@babel/preset-react'],
+			extensions: ['.js', '.jsx']
+		}),
 		terser({
 			sourceMap: true,
 			format: {
