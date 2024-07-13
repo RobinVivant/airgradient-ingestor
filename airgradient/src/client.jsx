@@ -45,12 +45,6 @@ const sensorMetrics = {
 		gaugeColor: '#FF1493',
 		visible: true
 	},
-	nox_index: {
-		label: 'NOx Index',
-		unit: '',
-		gaugeColor: '#FF8C00',
-		visible: false
-	},
 	aqi: {
 		label: 'Air Quality',
 		unit: '',
@@ -123,7 +117,7 @@ function smoothData(data, windowSize) {
   });
 }
 
-function calculateAirQualityIndex(pm25, co2) {
+function calculateAirQualityIndex(pm25, co2, nox) {
     // PM2.5 index
     let pm25Index;
     if (pm25 <= 12) pm25Index = 1;
@@ -142,8 +136,17 @@ function calculateAirQualityIndex(pm25, co2) {
     else if (co2 <= 40000) co2Index = 5;
     else co2Index = 6;
 
-    // Overall index (worst of the two)
-    return Math.max(pm25Index, co2Index);
+    // NOx index
+    let noxIndex;
+    if (nox <= 1) noxIndex = 1;
+    else if (nox <= 2) noxIndex = 2;
+    else if (nox <= 3) noxIndex = 3;
+    else if (nox <= 4) noxIndex = 4;
+    else if (nox <= 5) noxIndex = 5;
+    else noxIndex = 6;
+
+    // Overall index (worst of the three)
+    return Math.max(pm25Index, co2Index, noxIndex);
 }
 
 function calculateHeatIndex(tempCelsius, relativeHumidity) {
@@ -394,7 +397,7 @@ function App() {
 			let processedData = rawData.map(d => ({
 				...d,
 				feltTemp: calculateHeatIndex(d.atmp, d.rhum),
-				aqi: calculateAirQualityIndex(d.pm02, d.rco2),
+				aqi: calculateAirQualityIndex(d.pm02, d.rco2, d.nox_index),
 				ts: new Date(d.ts)
 			}));
 

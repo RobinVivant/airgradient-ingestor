@@ -157,11 +157,48 @@ app.get('/sensors/:id', async c => {
 		// Predict weather for the next 24 hours
 		const weatherPrediction = predictWeather(data);
 
+		const processedData = data.map(d => ({
+			...d,
+			aqi: calculateAirQualityIndex(d.pm02, d.rco2, d.nox_index)
+		}));
+
 		return c.json({
 			version: c.env.APP_VERSION,
-			data: data,
+			data: processedData,
 			weatherPrediction: weatherPrediction
 		});
+
+		function calculateAirQualityIndex(pm25, co2, nox) {
+			// PM2.5 index
+			let pm25Index;
+			if (pm25 <= 12) pm25Index = 1;
+			else if (pm25 <= 35.4) pm25Index = 2;
+			else if (pm25 <= 55.4) pm25Index = 3;
+			else if (pm25 <= 150.4) pm25Index = 4;
+			else if (pm25 <= 250.4) pm25Index = 5;
+			else pm25Index = 6;
+
+			// CO2 index
+			let co2Index;
+			if (co2 <= 1000) co2Index = 1;
+			else if (co2 <= 2000) co2Index = 2;
+			else if (co2 <= 5000) co2Index = 3;
+			else if (co2 <= 10000) co2Index = 4;
+			else if (co2 <= 40000) co2Index = 5;
+			else co2Index = 6;
+
+			// NOx index
+			let noxIndex;
+			if (nox <= 1) noxIndex = 1;
+			else if (nox <= 2) noxIndex = 2;
+			else if (nox <= 3) noxIndex = 3;
+			else if (nox <= 4) noxIndex = 4;
+			else if (nox <= 5) noxIndex = 5;
+			else noxIndex = 6;
+
+			// Overall index (worst of the three)
+			return Math.max(pm25Index, co2Index, noxIndex);
+		}
 	} catch (error) {
 		console.error('Error parsing JSON:', error);
 		return c.json({ error: 'An error occurred while parsing data', details: error.message }, 500);
