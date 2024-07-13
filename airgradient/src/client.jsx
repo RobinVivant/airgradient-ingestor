@@ -200,63 +200,8 @@ function App() {
 	const [animatingMetrics, setAnimatingMetrics] = React.useState({});
 
 	const svgRef = React.useRef(null);
-	const brushRef = React.useRef(null);
 	const [currentVersion, setCurrentVersion] = React.useState(null);
-
-	React.useEffect(() => {
-		if (data.length > 0 && svgRef.current) {
-			updateChart();
-		}
-	}, [data, visibleMetrics, timeRange]);
-
-	React.useEffect(() => {
-		function handleResize() {
-			if (data.length > 0 && svgRef.current) {
-				updateChart();
-			}
-		}
-		window.addEventListener('resize', handleResize);
-		return () => window.removeEventListener('resize', handleResize);
-	}, [data, visibleMetrics, timeRange]);
-
-	React.useEffect(() => {
-		if (svgRef.current && data.length > 0) {
-			const svg = d3.select(svgRef.current);
-			const width = svgRef.current.clientWidth;
-			const height = svgRef.current.clientHeight;
-			const margin = { top: 20, right: 20, bottom: 30, left: 50 };
-
-			const x = d3.scaleTime()
-				.domain(d3.extent(data, d => d.ts))
-				.range([margin.left, width - margin.right]);
-
-			const brush = d3.brushX()
-				.extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]])
-				.on("end", brushended);
-
-			brushRef.current = brush;
-
-			svg.selectAll(".brush").remove();
-			svg.append("g")
-				.attr("class", "brush")
-				.call(brush);
-
-			function brushended(event) {
-				if (!event.selection) {
-					console.log("Brush selection cleared");
-					return;
-				}
-				const [x0, x1] = event.selection.map(d => x.invert(d));
-				setTimeRange('custom');
-				setStartDate(x0.toLocaleString());
-				setEndDate(x1.toLocaleString());
-				
-				svg.select(".brush").call(brush.move, null);
-				
-				fetchDataAndUpdateChart();
-			}
-		}
-	}, [data, svgRef.current]);
+	const [brushExtent, setBrushExtent] = React.useState(null);
 
 	React.useEffect(() => {
 		const fetchDataAndVersion = async () => {
@@ -269,6 +214,12 @@ function App() {
 
 		return () => clearInterval(interval);
 	}, [timeRange, startDate, endDate]);
+
+	React.useEffect(() => {
+		if (data.length > 0) {
+			updateChart();
+		}
+	}, [data, visibleMetrics, brushExtent]);
 
 	async function fetchVersion() {
 		try {
@@ -322,9 +273,6 @@ function App() {
 				setTimeout(() => setAnimatingMetrics({}), 1000);
 				return processedData;
 			});
-
-			// Update the chart after setting the data
-			updateChart();
 		} catch (error) {
 			console.error('Error fetching or processing data:', error);
 			// You might want to set an error state here and display it to the user
@@ -340,7 +288,18 @@ function App() {
 
 		d3.select(svgRef.current).selectAll("*").remove();
 
+		const svg = d3.select(svgRef.current)
+			.append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+			.append("g")
+			.attr("transform", `translate(${margin.left},${margin.top})`);
+
 		const visibleMetricKeys = Object.keys(sensorMetrics).filter(metric => visibleMetrics[metric]);
+
+		const x = d3.scaleTime()
+			.domain(brushExtent || d3.extent(data, d => d.ts))
+			.range([0, width]);
 
 		const y = d3.scaleLinear()
 			.domain([
@@ -348,18 +307,6 @@ function App() {
 				d3.max(data, d => Math.max(...visibleMetricKeys.map(metric => d[metric])))
 			])
 			.range([height, 0]);
-
-		const svg = d3.select(svgRef.current)
-			.append("svg")
-			.attr("width", "100%")
-			.attr("height", "100%")
-			.attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
-			.append("g")
-			.attr("transform", `translate(${margin.left},${margin.top})`);
-
-		const x = d3.scaleTime()
-			.domain(d3.extent(data, d => d.ts))
-			.range([0, width]);
 
 		const xAxis = d3.axisBottom(x)
 			.tickFormat(d => d.toLocaleString(undefined, { 
@@ -381,23 +328,12 @@ function App() {
 		svg.append("g")
 			.call(d3.axisLeft(y));
 
-		const clip = svg.append("defs").append("svg:clipPath")
-			.attr("id", "clip")
-			.append("svg:rect")
-			.attr("width", width)
-			.attr("height", height)
-			.attr("x", 0)
-			.attr("y", 0);
-
-		const chartGroup = svg.append("g")
-			.attr("clip-path", "url(#clip)");
-
 		visibleMetricKeys.forEach(metric => {
 			const line = d3.line()
 				.x(d => x(d.ts))
 				.y(d => y(d[metric]));
 
-			chartGroup.append("path")
+			svg.append("path")
 				.datum(data)
 				.attr("fill", "none")
 				.attr("stroke", sensorMetrics[metric].gaugeColor)
@@ -405,10 +341,24 @@ function App() {
 				.attr("d", line);
 		});
 
-		// Update brush
-		if (brushRef.current) {
-			svg.select(".brush")
-				.call(brushRef.current.move, null);
+		const brush = d3.brushX()
+			.extent([[0, 0], [width, height]])
+			.on("end", brushended);
+
+		svg.append("g")
+			.attr("class", "brush")
+			.call(brush);
+
+		function brushended(event) {
+			if (!event.selection) {
+				setBrushExtent(null);
+				return;
+			}
+			const [x0, x1] = event.selection.map(x.invert);
+			setBrushExtent([x0, x1]);
+			setTimeRange('custom');
+			setStartDate(x0.toLocaleString());
+			setEndDate(x1.toLocaleString());
 		}
 	}
 
