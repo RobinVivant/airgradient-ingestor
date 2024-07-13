@@ -248,6 +248,15 @@ function App() {
 	}, [timeRange, startDate, endDate]);
 
 	React.useEffect(() => {
+		if (shouldReload) {
+			const timer = setTimeout(() => {
+				window.location.reload();
+			}, 5000);
+			return () => clearTimeout(timer);
+		}
+	}, [shouldReload]);
+
+	React.useEffect(() => {
 		if (data.length > 0 && chartDimensions.width > 0 && chartDimensions.height > 0) {
 			updateChart();
 		}
@@ -334,7 +343,7 @@ function App() {
 	function updateChart() {
 		if (!svgRef.current || data.length === 0 || chartDimensions.width === 0 || chartDimensions.height === 0) return;
 
-		const margin = { top: 10, right: 10, bottom: 40, left: 40 };
+		const margin = { top: 5, right: 5, bottom: 5, left: 5 };
 		const width = chartDimensions.width - margin.left - margin.right;
 		const height = chartDimensions.height - margin.top - margin.bottom;
 
@@ -374,10 +383,13 @@ function App() {
 			.style("text-anchor", "end")
 			.attr("dx", "-.8em")
 			.attr("dy", ".15em")
-			.attr("transform", "rotate(-25)");
+			.attr("transform", "rotate(-25)")
+			.style("font-size", "8px");
 
 		svg.append("g")
-			.call(d3.axisLeft(y));
+			.call(d3.axisLeft(y))
+			.selectAll("text")
+			.style("font-size", "8px");
 
 		visibleMetricKeys.forEach(metric => {
 			const line = d3.line()
