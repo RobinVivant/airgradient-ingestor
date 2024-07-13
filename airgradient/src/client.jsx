@@ -236,6 +236,7 @@ function App() {
 
 			brushRef.current = brush;
 
+			svg.selectAll(".brush").remove();
 			svg.append("g")
 				.attr("class", "brush")
 				.call(brush);
@@ -252,12 +253,10 @@ function App() {
 				
 				svg.select(".brush").call(brush.move, null);
 				
-				requestAnimationFrame(() => {
-					fetchDataAndUpdateChart();
-				});
+				fetchDataAndUpdateChart();
 			}
 		}
-	}, [data]);
+	}, [data, svgRef.current]);
 
 	React.useEffect(() => {
 		const fetchDataAndVersion = async () => {
@@ -325,9 +324,7 @@ function App() {
 			});
 
 			// Update the chart after setting the data
-			requestAnimationFrame(() => {
-				updateChart();
-			});
+			updateChart();
 		} catch (error) {
 			console.error('Error fetching or processing data:', error);
 			// You might want to set an error state here and display it to the user
