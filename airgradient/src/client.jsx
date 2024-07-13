@@ -245,8 +245,7 @@ function App() {
 	const svgRef = React.useRef(null);
 	const chartContainerRef = React.useRef(null);
 	const [currentVersion, setCurrentVersion] = React.useState(null);
-	const [lastFetchedVersion, setLastFetchedVersion] = React.useState(null);
-	const [shouldReload, setShouldReload] = React.useState(false);
+	const [newVersionAvailable, setNewVersionAvailable] = React.useState(false);
 	const [chartDimensions, setChartDimensions] = React.useState({ width: 0, height: 0 });
 
 	React.useEffect(() => {
@@ -259,15 +258,6 @@ function App() {
 
 		return () => clearInterval(interval);
 	}, [timeRange, startDate, endDate]);
-
-	React.useEffect(() => {
-		if (shouldReload) {
-			const timer = setTimeout(() => {
-				window.location.reload();
-			}, 5000);
-			return () => clearTimeout(timer);
-		}
-	}, [shouldReload]);
 
 	React.useEffect(() => {
 		if (data.length > 0 && chartDimensions.width > 0 && chartDimensions.height > 0) {
@@ -319,13 +309,11 @@ function App() {
 			}
 
 			// Check if version has changed
-			if (lastFetchedVersion !== version) {
-				console.log('New version detected. Preparing to refresh the page...');
+			if (currentVersion === null) {
 				setCurrentVersion(version);
-				setShouldReload(true);
-			} else {
-				setCurrentVersion(version);
-				setLastFetchedVersion(version);
+			} else if (currentVersion !== version) {
+				console.log('New version detected.');
+				setNewVersionAvailable(true);
 			}
 
 			const processedData = rawData.map(d => ({
@@ -496,20 +484,20 @@ function App() {
 		}
 	}, [shouldReload]);
 
-	if (shouldReload) {
-		return (
-			<div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
-				<div className="bg-white p-6 rounded-lg shadow-xl text-center">
-					<h2 className="text-xl font-bold mb-4">New Version Available</h2>
-					<p className="mb-4">A new version of the application is available. The page will refresh in 5 seconds.</p>
-					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-				</div>
-			</div>
-		);
-	}
-
 	return (
 		<div className="container mx-auto px-4 py-4 sm:py-8 h-screen flex flex-col">
+			{newVersionAvailable && (
+				<div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4" role="alert">
+					<p className="font-bold">New Version Available</p>
+					<p>A new version of the application is available. Please refresh the page to update.</p>
+					<button 
+						onClick={() => window.location.reload()} 
+						className="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+					>
+						Refresh Now
+					</button>
+				</div>
+			)}
 			<div className="grid grid-cols-4 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
 				{Object.keys(sensorMetrics).map(metric => (
 					<Gauge
