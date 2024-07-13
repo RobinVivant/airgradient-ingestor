@@ -15,16 +15,21 @@ app.get('/ws', (c) => {
     return c.text('Expected Upgrade: websocket', 426);
   }
 
-  const { response, socket } = Durable.webSocketPair();
-  socket.accept();
+  const pair = new WebSocketPair();
+  const [client, server] = Object.values(pair);
 
-  socket.addEventListener('message', (event) => {
+  server.accept();
+
+  server.addEventListener('message', (event) => {
     if (event.data === 'ping') {
-      socket.send('pong');
+      server.send('pong');
     }
   });
 
-  return response;
+  return new Response(null, {
+    status: 101,
+    webSocket: client,
+  });
 });
 
 // Add a version endpoint
