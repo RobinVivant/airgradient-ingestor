@@ -345,7 +345,7 @@ function App() {
 	function updateChart() {
 		if (!svgRef.current || data.length === 0 || chartDimensions.width === 0 || chartDimensions.height === 0) return;
 
-		const margin = { top: 5, right: 5, bottom: 10, left: 20 };
+		const margin = { top: 5, right: 0, bottom: 20, left: 20 };
 		const width = chartDimensions.width - margin.left - margin.right;
 		const height = chartDimensions.height - margin.top - margin.bottom;
 
