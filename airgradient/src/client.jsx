@@ -193,7 +193,8 @@ function App() {
 		ws.onclose = () => {
 			console.log('WebSocket disconnected');
 			clearInterval(pingInterval);
-			setTimeout(() => window.location.reload(), 1000);
+			alert('A new version has been deployed. The page will now refresh.');
+			window.location.reload();
 		};
 
 		return () => {
