@@ -114,8 +114,8 @@ function Gauge({ metric, value, visible, onToggle, isAnimating }) {
 	return (
 		<div className="bg-white p-4 rounded-lg shadow" style={style} onClick={() => onToggle(metric)}>
 			<div className="text-lg font-semibold" style={{ color: gaugeColor }}>
-				<RotatingNumber value={value} />
-				{unit}
+				<RotatingNumber value={value !== 'N/A' ? parseFloat(value).toFixed(1) : 'N/A'} />
+				{value !== 'N/A' && unit}
 			</div>
 			<div className="text-sm text-gray-500">{label}</div>
 		</div>
@@ -363,8 +363,8 @@ function App() {
 			setTimeRange('custom');
 			setStartDate(x0.toLocaleString(undefined, {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}));
 			setEndDate(x1.toLocaleString(undefined, {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}));
-			fetchDataAndUpdateChart();
 			svg.select(".brush").call(brush.move, null);
+			setTimeout(() => fetchDataAndUpdateChart(), 0);
 		}
 	}
 
@@ -382,7 +382,7 @@ function App() {
 					<Gauge 
 						key={metric} 
 						metric={metric} 
-						value={data.length > 0 ? data[data.length - 1][metric].toFixed(1) : 'N/A'} 
+						value={data.length > 0 && data[data.length - 1][metric] !== undefined ? data[data.length - 1][metric] : 'N/A'} 
 						visible={visibleMetrics[metric]}
 						onToggle={toggleChartSeries}
 						isAnimating={animatingMetrics[metric]}
