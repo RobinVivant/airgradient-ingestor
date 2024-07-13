@@ -303,7 +303,7 @@ function App() {
 		const interval = setInterval(fetchDataAndVersion, 30000); // Fetch every 30 seconds
 
 		return () => clearInterval(interval);
-	}, [timeRange, startDate, endDate]);
+	}, [timeRange]);
 
 	React.useEffect(() => {
 		if (data.length > 0 && chartDimensions.width > 0 && chartDimensions.height > 0) {
