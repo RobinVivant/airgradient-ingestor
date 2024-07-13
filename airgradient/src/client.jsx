@@ -97,11 +97,18 @@ function reduceDataPoints(data, targetPoints) {
 
 function smoothData(data, windowSize) {
   return data.map((point, index, array) => {
-    const window = array.slice(Math.max(0, index - windowSize), index + 1);
+    const halfWindow = Math.floor(windowSize / 2);
+    const start = Math.max(0, index - halfWindow);
+    const end = Math.min(array.length, index + halfWindow + 1);
+    const window = array.slice(start, end);
+    
     const smoothed = {};
     Object.keys(point).forEach(key => {
       if (typeof point[key] === 'number') {
-        smoothed[key] = window.reduce((sum, p) => sum + p[key], 0) / window.length;
+        const weights = window.map((_, i) => 1 - Math.abs(i - (index - start)) / halfWindow);
+        const weightedSum = window.reduce((sum, p, i) => sum + p[key] * weights[i], 0);
+        const weightSum = weights.reduce((sum, w) => sum + w, 0);
+        smoothed[key] = weightedSum / weightSum;
       } else {
         smoothed[key] = point[key];
       }
@@ -345,8 +352,8 @@ function App() {
 			}));
 
 			// Apply smoothing based on time range
-			const smoothingFactor = getTimeRangeInMs(timeRange) / (15 * 60 * 1000); // 15 minutes as base
-			const windowSize = Math.max(1, Math.round(smoothingFactor));
+			const smoothingFactor = Math.sqrt(getTimeRangeInMs(timeRange) / (15 * 60 * 1000)); // 15 minutes as base
+			const windowSize = Math.max(3, Math.round(smoothingFactor * 2) | 1); // Ensure odd number
 			processedData = smoothData(processedData, windowSize);
 
 			setData(prevData => {
@@ -421,7 +428,7 @@ function App() {
 			const line = d3.line()
 				.x(d => x(d.ts))
 				.y(d => y(d[metric]))
-				.curve(d3.curveCatmullRom.alpha(0.5));
+				.curve(d3.curveMonotoneX);
 
 			svg.append('path')
 				.datum(data)
