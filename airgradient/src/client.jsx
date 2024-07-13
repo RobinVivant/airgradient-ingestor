@@ -475,14 +475,6 @@ function App() {
 		}));
 	}
 
-	React.useEffect(() => {
-		if (shouldReload) {
-			const timer = setTimeout(() => {
-				window.location.reload();
-			}, 5000); // Wait for 5 seconds before reloading
-			return () => clearTimeout(timer);
-		}
-	}, [shouldReload]);
 
 	return (
 		<div className="container mx-auto px-4 py-4 sm:py-8 h-screen flex flex-col">
