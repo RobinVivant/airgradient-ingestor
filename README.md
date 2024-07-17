@@ -1,5 +1,7 @@
 # AirGradient Ingestor
 
+![AirGradient Dashboard](screenshot.png)
+
 This project is a comprehensive solution for ingesting, processing, and visualizing data from AirGradient sensors. It uses Cloudflare Workers for serverless deployment and provides a real-time dashboard for monitoring air quality metrics.
 
 ## About AirGradient Sensors
