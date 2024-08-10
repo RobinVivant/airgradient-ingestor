@@ -88,65 +88,58 @@ function getTimeRangeInMs(timeRange) {
 	}
 }
 
-function reduceDataPoints(data, targetPoints) {
-	if (data.length <= targetPoints) return data;
-
-	const step = Math.floor(data.length / targetPoints);
-	return data.filter((_, index) => index % step === 0);
-}
-
 function smoothData(data, windowSize) {
-  return data.map((point, index, array) => {
-    const halfWindow = Math.floor(windowSize / 2);
-    const start = Math.max(0, index - halfWindow);
-    const end = Math.min(array.length, index + halfWindow + 1);
-    const window = array.slice(start, end);
+	return data.map((point, index, array) => {
+		const halfWindow = Math.floor(windowSize / 2);
+		const start = Math.max(0, index - halfWindow);
+		const end = Math.min(array.length, index + halfWindow + 1);
+		const window = array.slice(start, end);
 
-    const smoothed = {};
-    Object.keys(point).forEach(key => {
-      if (typeof point[key] === 'number') {
-        const weights = window.map((_, i) => 1 - Math.abs(i - (index - start)) / halfWindow);
-        const weightedSum = window.reduce((sum, p, i) => sum + p[key] * weights[i], 0);
-        const weightSum = weights.reduce((sum, w) => sum + w, 0);
-        smoothed[key] = weightedSum / weightSum;
-      } else {
-        smoothed[key] = point[key];
-      }
-    });
-    return smoothed;
-  });
+		const smoothed = {};
+		Object.keys(point).forEach(key => {
+			if (typeof point[key] === 'number') {
+				const weights = window.map((_, i) => 1 - Math.abs(i - (index - start)) / halfWindow);
+				const weightedSum = window.reduce((sum, p, i) => sum + p[key] * weights[i], 0);
+				const weightSum = weights.reduce((sum, w) => sum + w, 0);
+				smoothed[key] = weightedSum / weightSum;
+			} else {
+				smoothed[key] = point[key];
+			}
+		});
+		return smoothed;
+	});
 }
 
 function calculateAirQualityIndex(pm25, co2, nox) {
-    // PM2.5 index
-    let pm25Index;
-    if (pm25 <= 12) pm25Index = 1;
-    else if (pm25 <= 35.4) pm25Index = 2;
-    else if (pm25 <= 55.4) pm25Index = 3;
-    else if (pm25 <= 150.4) pm25Index = 4;
-    else if (pm25 <= 250.4) pm25Index = 5;
-    else pm25Index = 6;
+	// PM2.5 index
+	let pm25Index;
+	if (pm25 <= 12) pm25Index = 1;
+	else if (pm25 <= 35.4) pm25Index = 2;
+	else if (pm25 <= 55.4) pm25Index = 3;
+	else if (pm25 <= 150.4) pm25Index = 4;
+	else if (pm25 <= 250.4) pm25Index = 5;
+	else pm25Index = 6;
 
-    // CO2 index
-    let co2Index;
-    if (co2 <= 1000) co2Index = 1;
-    else if (co2 <= 2000) co2Index = 2;
-    else if (co2 <= 5000) co2Index = 3;
-    else if (co2 <= 10000) co2Index = 4;
-    else if (co2 <= 40000) co2Index = 5;
-    else co2Index = 6;
+	// CO2 index
+	let co2Index;
+	if (co2 <= 1000) co2Index = 1;
+	else if (co2 <= 2000) co2Index = 2;
+	else if (co2 <= 5000) co2Index = 3;
+	else if (co2 <= 10000) co2Index = 4;
+	else if (co2 <= 40000) co2Index = 5;
+	else co2Index = 6;
 
-    // NOx index
-    let noxIndex;
-    if (nox <= 1) noxIndex = 1;
-    else if (nox <= 2) noxIndex = 2;
-    else if (nox <= 3) noxIndex = 3;
-    else if (nox <= 4) noxIndex = 4;
-    else if (nox <= 5) noxIndex = 5;
-    else noxIndex = 6;
+	// NOx index
+	let noxIndex;
+	if (nox <= 1) noxIndex = 1;
+	else if (nox <= 2) noxIndex = 2;
+	else if (nox <= 3) noxIndex = 3;
+	else if (nox <= 4) noxIndex = 4;
+	else if (nox <= 5) noxIndex = 5;
+	else noxIndex = 6;
 
-    // Overall index (worst of the three)
-    return Math.max(pm25Index, co2Index, noxIndex);
+	// Overall index (worst of the three)
+	return Math.max(pm25Index, co2Index, noxIndex);
 }
 
 function calculateHeatIndex(tempCelsius, relativeHumidity) {
@@ -186,13 +179,13 @@ function Gauge({ metric, value, visible, onToggle, isAnimating }) {
 	const displayValue = value !== 'N/A' ?
 		(metric === 'rco2' || metric === 'pm02' ?
 			Math.round(parseFloat(value))
-		: metric === 'atmp' || metric === 'feltTemp' || metric === 'rhum' ?
-			parseFloat(value) % 1 === 0 ? parseInt(value) : parseFloat(value).toFixed(1)
-		: metric === 'pressure' || metric === 'tvoc_index' || metric === 'nox_index' ?
-			parseFloat(value) % 1 === 0 ? parseInt(value) : parseFloat(value).toFixed(1)
-		: metric === 'aqi' ?
-			getAirQualityLabel(Math.round(parseFloat(value)))
-		: parseFloat(value).toFixed(1))
+			: metric === 'atmp' || metric === 'feltTemp' || metric === 'rhum' ?
+				parseFloat(value) % 1 === 0 ? parseInt(value) : parseFloat(value).toFixed(1)
+				: metric === 'pressure' || metric === 'tvoc_index' || metric === 'nox_index' ?
+					parseFloat(value) % 1 === 0 ? parseInt(value) : parseFloat(value).toFixed(1)
+					: metric === 'aqi' ?
+						getAirQualityLabel(Math.round(parseFloat(value)))
+						: parseFloat(value).toFixed(1))
 		: 'N/A';
 
 	return (
@@ -268,14 +261,21 @@ function TimeRangeSelector({ timeRange, onTimeRangeChange }) {
 }
 
 function getAirQualityLabel(aqi) {
-	switch(aqi) {
-		case 1: return 'Good';
-		case 2: return 'Moderate';
-		case 3: return 'Unhealthy for Sensitive Groups';
-		case 4: return 'Unhealthy';
-		case 5: return 'Very Unhealthy';
-		case 6: return 'Hazardous';
-		default: return 'Unknown';
+	switch (aqi) {
+		case 1:
+			return 'Good';
+		case 2:
+			return 'Moderate';
+		case 3:
+			return 'Unhealthy for Sensitive Groups';
+		case 4:
+			return 'Unhealthy';
+		case 5:
+			return 'Very Unhealthy';
+		case 6:
+			return 'Hazardous';
+		default:
+			return 'Unknown';
 	}
 }
 
@@ -512,7 +512,7 @@ function App() {
 						visibleMetricKeys.map(metric =>
 							`<span style="color:${sensorMetrics[metric].gaugeColor}">${d[metric] !== undefined ? d[metric].toFixed(1) : 'N/A'}${sensorMetrics[metric].unit}</span>`
 						).join('<br>')
-					}`)
+					}`);
 				} else {
 					tooltip.html('No data available');
 				}
@@ -571,7 +571,8 @@ function App() {
 				/>
 			</div>
 
-			<div id="chartContainer" ref={chartContainerRef} className="bg-white pt-0 px-4 pb-4 rounded-lg shadow flex-grow overflow-hidden mb-4"
+			<div id="chartContainer" ref={chartContainerRef}
+					 className="bg-white pt-0 px-4 pb-4 rounded-lg shadow flex-grow overflow-hidden mb-4"
 					 style={{ height: 'calc(100vh - 320px)' }}>
 				<svg ref={svgRef}></svg>
 			</div>
