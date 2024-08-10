@@ -372,7 +372,7 @@ function App() {
 			const baseSmoothingTime = Math.min(averageTimeBetweenPoints, 15 * 60 * 1000); // Cap at 15 minutes
 			const smoothingFactor = Math.sqrt(timeRangeMs / baseSmoothingTime);
 			const windowSize = Math.max(3, Math.round(smoothingFactor * 2) | 1); // Ensure odd number
-			
+
 			// Smooth data for all metrics except pm02
 			const metricsToSmooth = Object.keys(sensorMetrics).filter(metric => metric !== 'pm02');
 			processedData = processedData.map(dataPoint => {
@@ -514,7 +514,7 @@ function App() {
 				const d1 = data[i];
 				const d = d1 && x0 - d0.ts > d1.ts - x0 ? d1 : d0;
 
-				if (d && d.ts) {
+				if (d?.ts) {
 					tooltip.html(`<strong>${new Date(d.ts.getTime() - d.ts.getTimezoneOffset() * 60000).toLocaleString(undefined, {
 						month: 'short',
 						day: 'numeric',
