@@ -367,14 +367,24 @@ function App() {
 				ts: new Date(d.ts)
 			}));
 
-			// Apply smoothing based on time range
+			// Apply smoothing based on time range, except for pm02
 			const timeRangeMs = getTimeRangeInMs(timeRange);
 			const dataPointCount = processedData.length;
 			const averageTimeBetweenPoints = dataPointCount > 1 ? timeRangeMs / (dataPointCount - 1) : timeRangeMs;
 			const baseSmoothingTime = Math.min(averageTimeBetweenPoints, 15 * 60 * 1000); // Cap at 15 minutes
 			const smoothingFactor = Math.sqrt(timeRangeMs / baseSmoothingTime);
 			const windowSize = Math.max(3, Math.round(smoothingFactor * 2) | 1); // Ensure odd number
+			
+			// Store original pm02 values
+			const originalPm02Values = processedData.map(d => d.pm02);
+			
+			// Smooth data
 			processedData = smoothData(processedData, windowSize);
+			
+			// Restore original pm02 values
+			processedData.forEach((d, i) => {
+				d.pm02 = originalPm02Values[i];
+			});
 
 			setData(prevData => {
 				const newAnimatingMetrics = {};
