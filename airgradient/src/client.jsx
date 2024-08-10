@@ -368,7 +368,11 @@ function App() {
 			}));
 
 			// Apply smoothing based on time range
-			const smoothingFactor = Math.sqrt(getTimeRangeInMs(timeRange) / (15 * 60 * 1000)); // 15 minutes as base
+			const timeRangeMs = getTimeRangeInMs(timeRange);
+			const dataPointCount = processedData.length;
+			const averageTimeBetweenPoints = dataPointCount > 1 ? timeRangeMs / (dataPointCount - 1) : timeRangeMs;
+			const baseSmoothingTime = Math.min(averageTimeBetweenPoints, 15 * 60 * 1000); // Cap at 15 minutes
+			const smoothingFactor = Math.sqrt(timeRangeMs / baseSmoothingTime);
 			const windowSize = Math.max(3, Math.round(smoothingFactor * 2) | 1); // Ensure odd number
 			processedData = smoothData(processedData, windowSize);
 
