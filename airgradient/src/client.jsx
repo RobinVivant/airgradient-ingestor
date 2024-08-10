@@ -88,22 +88,20 @@ function getTimeRangeInMs(timeRange) {
 	}
 }
 
-function smoothData(data, windowSize) {
+function smoothData(data, windowSize, metricsToSmooth) {
 	return data.map((point, index, array) => {
 		const halfWindow = Math.floor(windowSize / 2);
 		const start = Math.max(0, index - halfWindow);
 		const end = Math.min(array.length, index + halfWindow + 1);
 		const window = array.slice(start, end);
 
-		const smoothed = {};
-		Object.keys(point).forEach(key => {
+		const smoothed = { ...point };
+		metricsToSmooth.forEach(key => {
 			if (typeof point[key] === 'number') {
 				const weights = window.map((_, i) => 1 - Math.abs(i - (index - start)) / halfWindow);
 				const weightedSum = window.reduce((sum, p, i) => sum + p[key] * weights[i], 0);
 				const weightSum = weights.reduce((sum, w) => sum + w, 0);
 				smoothed[key] = weightedSum / weightSum;
-			} else {
-				smoothed[key] = point[key];
 			}
 		});
 		return smoothed;
@@ -375,15 +373,15 @@ function App() {
 			const smoothingFactor = Math.sqrt(timeRangeMs / baseSmoothingTime);
 			const windowSize = Math.max(3, Math.round(smoothingFactor * 2) | 1); // Ensure odd number
 			
-			// Store original pm02 values
-			const originalPm02Values = processedData.map(d => d.pm02);
-			
-			// Smooth data
-			processedData = smoothData(processedData, windowSize);
-			
-			// Restore original pm02 values
-			processedData.forEach((d, i) => {
-				d.pm02 = originalPm02Values[i];
+			// Smooth data for all metrics except pm02
+			const metricsToSmooth = Object.keys(sensorMetrics).filter(metric => metric !== 'pm02');
+			processedData = processedData.map(dataPoint => {
+				const smoothedPoint = { ...dataPoint };
+				metricsToSmooth.forEach(metric => {
+					const smoothedValues = smoothData([dataPoint], windowSize, [metric])[0];
+					smoothedPoint[metric] = smoothedValues[metric];
+				});
+				return smoothedPoint;
 			});
 
 			setData(prevData => {
